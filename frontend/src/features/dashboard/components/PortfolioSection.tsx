@@ -56,15 +56,15 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
   const chartSeries = chartData.map((d) => getSeriesValue(d, activeTab));
   const chartLabels = chartData.map((d) => d.name);
 
-  // 모노크롬 색상 팔레트
-  const monochromeColors = [
-    "#171717",
-    "#404040",
-    "#525252",
-    "#737373",
-    "#a3a3a3",
-    "#d4d4d4",
-    "#e5e5e5",
+  // 차트용 컬러 팔레트 — 수입원별 구분을 위한 세련된 색상 조합
+  const chartColors = [
+    "#6366f1", // Indigo
+    "#14b8a6", // Teal
+    "#f59e0b", // Amber
+    "#f43f5e", // Rose
+    "#0ea5e9", // Sky
+    "#8b5cf6", // Violet
+    "#10b981", // Emerald
   ];
 
   const chartOptions: ApexOptions = {
@@ -74,7 +74,7 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
       background: "transparent",
       animations: { enabled: true },
     },
-    colors: monochromeColors.slice(0, Math.max(chartData.length, 1)),
+    colors: chartColors.slice(0, Math.max(chartData.length, 1)),
     labels: chartLabels,
     plotOptions: {
       pie: {
@@ -199,7 +199,7 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
                         className="w-2 h-2 rounded-full shrink-0"
                         style={{
                           backgroundColor:
-                            monochromeColors[index % monochromeColors.length],
+                            chartColors[index % chartColors.length],
                         }}
                       />
                       <span className="font-medium text-foreground truncate">
@@ -221,7 +221,7 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
                       className="h-full rounded-full"
                       style={{
                         backgroundColor:
-                          monochromeColors[index % monochromeColors.length],
+                          chartColors[index % chartColors.length],
                       }}
                       initial={{ width: 0 }}
                       animate={{ width: `${barWidth}%` }}

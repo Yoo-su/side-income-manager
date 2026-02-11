@@ -21,15 +21,8 @@ export function TrendChart({ data, className }: TrendChartProps) {
       fontFamily: "Pretendard Variable, sans-serif",
       background: "transparent",
     },
-    colors: ["#171717", "#e5e5e5", "#ef4444"], // 순수익 강조 (빨강? 아니면 짙은 회색?) -> 요청대로 시인성 개선.
-    // 모노크롬 유지하되 순수익은 튀게? 아니면 스타일 변경.
-    // 기존: ["#171717", "#d4d4d4", "#737373"]
-    // User asked for "Check visibility of net profit line".
-    // I will use a distinct color or darker shade. Let's stick to monochrome but make it black line on grey bars?
-    // Revenue: #525252 (Dark Grey), Expense: #e5e5e5 (Light Grey), NetProfit: #000000 (Black)
-    // Or Revenue: Black, Expense: Light, NetProfit: Primary Color?
-    // Let's try: Revenue=Black(#171717), Expense=Light(#e5e5e5), NetProfit=Stroke(#2563eb - Blue? No monochrome).
-    // Let's use a very Dark Grey for Revenue, Light for Expense, and BLACK for Net Profit with markers.
+    // 수익: Indigo, 지출: Rose, 순수익: Emerald
+    colors: ["#6366f1", "#f43f5e", "#10b981"],
 
     plotOptions: {
       bar: {
@@ -45,7 +38,7 @@ export function TrendChart({ data, className }: TrendChartProps) {
     markers: {
       size: 5,
       colors: ["#fff"],
-      strokeColors: "#000",
+      strokeColors: "#10b981",
       strokeWidth: 2,
       hover: {
         size: 7,
@@ -92,10 +85,6 @@ export function TrendChart({ data, className }: TrendChartProps) {
     { name: "지출", type: "bar", data: data.map((d) => d.expense) },
     { name: "순수익", type: "line", data: data.map((d) => d.netProfit) },
   ];
-
-  // 순수익 라인 색상 오버라이드 (options.colors 순서: 수익, 지출, 순수익)
-  // 수익: #404040, 지출: #e5e5e5, 순수익: #000000
-  options.colors = ["#404040", "#e5e5e5", "#000000"];
 
   return (
     <Card

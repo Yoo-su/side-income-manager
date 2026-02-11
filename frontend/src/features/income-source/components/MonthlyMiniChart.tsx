@@ -9,7 +9,12 @@ interface MonthlyMiniChartProps {
 
 /** 수입원 상세 — 월별 수익 미니 차트 */
 export function MonthlyMiniChart({ data }: MonthlyMiniChartProps) {
-  const categories = data.map((d) => `${d.month}월`);
+  // "2026-01" -> "1월" 형태로 간결하게 표시
+  const categories = data.map((d) => {
+    const parts = d.month.split("-");
+    const monthNum = parts.length === 2 ? parseInt(parts[1], 10) : d.month;
+    return `${monthNum}월`;
+  });
 
   const options: ApexOptions = {
     chart: {
@@ -17,8 +22,11 @@ export function MonthlyMiniChart({ data }: MonthlyMiniChartProps) {
       toolbar: { show: false },
       fontFamily: "Pretendard Variable, sans-serif",
       background: "transparent",
+      // 차트 내부 패딩 — y축 숨김 시 남는 좌측 공간 제거
+      sparkline: { enabled: false },
     },
-    colors: ["#171717", "#e5e5e5"],
+    // 수익: Indigo, 지출: Rose
+    colors: ["#6366f1", "#f43f5e"],
     plotOptions: {
       bar: {
         columnWidth: "60%",
@@ -28,16 +36,20 @@ export function MonthlyMiniChart({ data }: MonthlyMiniChartProps) {
     xaxis: {
       categories,
       labels: {
-        style: { colors: "#a3a3a3", fontSize: "11px" },
+        style: { colors: "#a3a3a3", fontSize: "10px" },
+        rotate: 0,
+        trim: false,
       },
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
     yaxis: {
       show: false,
+      labels: { show: false },
     },
     grid: {
       show: false,
+      padding: { left: 0, right: 0 },
     },
     tooltip: {
       y: {
