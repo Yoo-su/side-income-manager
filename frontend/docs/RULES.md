@@ -5,6 +5,7 @@
 - **Maintainability & Extensibility**: Code must be written with future growth in mind.
 - **Documentation**: Every feature must have a `README.md` and `FLOW.md`.
 - **Language**: All code, comments, and documentation must be in **Korean** (unless standard English terminology is required for technical precision).
+- **Type Safety**: The usage of the `any` type is **strictly prohibited**. Use generic types, `unknown`, or proper interfaces/types instead.
 
 ## 2. Architecture
 
@@ -26,7 +27,16 @@
 ## 4. Technology Stack
 
 - **Framework**: React + Vite + TypeScript.
-- **Styling**: (To be determined, likely Tailwind or CSS Modules based on project setup - currently standard CSS/Modules or User preference). _Agent Note: Verify styling preference if not set._
+- **Styling**: **Tailwind CSS** + **shadcn/ui**.
+
+## 5. Design Guidelines
+
+- **Philosophy**: Clean, intuitive, and unique. Avoid generic "bootstrappy" looks.
+- **Restrictions**:
+  - **Icons**: Minimize usage of standard `lucide-react` icons. Use alternatives or custom assets where possible for a unique feel.
+  - **Shapes**: Avoid excessive rounded corners (no pill-shaped buttons everywhere unless intentional).
+  - **Colors**: Avoid overuse of gradients. Stick to solid, sophisticated color palettes.
+- **Tools**: Use **shadcn/ui** for rapid component development but customize base styles to avoid the "default shadcn look".
 
 ## 5. Documentation Requirements
 

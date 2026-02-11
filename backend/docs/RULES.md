@@ -5,6 +5,7 @@
 - **Maintainability & Extensibility**: Code must be written with future growth in mind.
 - **Documentation**: Every feature must have a `README.md` and `FLOW.md`.
 - **Language**: All code, comments, and documentation must be in **Korean** (unless standard English terminology is required for technical precision).
+- **Type Safety**: The usage of the `any` type is **strictly prohibited**. Use generic types, `unknown`, or proper interfaces/classes instead.
 
 ## 2. Architecture
 
