@@ -8,7 +8,7 @@ import {
   Delete,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiOperation } from '@nestjs/swagger';
 import { IncomeSourceService } from './income-source.service';
 import {
   CreateIncomeSourceDto,
@@ -28,6 +28,7 @@ export class IncomeSourceController {
   ) {}
 
   @Post()
+  @ApiOperation({ summary: '수입원 생성' })
   @ApiResponse({
     status: 201,
     description: '수입원이 성공적으로 생성되었습니다.',
@@ -38,6 +39,7 @@ export class IncomeSourceController {
   }
 
   @Get()
+  @ApiOperation({ summary: '모든 수입원 조회' })
   @ApiResponse({
     status: 200,
     description: '모든 수입원 목록을 반환합니다.',
@@ -48,6 +50,7 @@ export class IncomeSourceController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: '특정 수입원 조회' })
   @ApiResponse({
     status: 200,
     description: '특정 수입원 정보를 반환합니다.',
@@ -59,6 +62,7 @@ export class IncomeSourceController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: '수입원 정보 수정' })
   @ApiResponse({
     status: 200,
     description: '수입원 정보가 수정되었습니다.',
@@ -73,6 +77,7 @@ export class IncomeSourceController {
   }
 
   @Get(':id/transactions')
+  @ApiOperation({ summary: '특정 수입원의 거래 내역 조회' })
   @ApiResponse({
     status: 200,
     description: '해당 수입원의 거래 내역을 반환합니다.',
@@ -83,6 +88,7 @@ export class IncomeSourceController {
   }
 
   @Get(':id/summary')
+  @ApiOperation({ summary: '특정 수입원의 요약 정보 조회' })
   @ApiResponse({
     status: 200,
     description: '해당 수입원의 요약 정보를 반환합니다.',
@@ -92,6 +98,7 @@ export class IncomeSourceController {
   }
 
   @Get(':id/monthly-stats')
+  @ApiOperation({ summary: '특정 수입원의 월별 통계 조회' })
   @ApiResponse({
     status: 200,
     description: '해당 수입원의 월별 수익/지출 통계를 반환합니다. (기본 6개월)',
@@ -101,6 +108,7 @@ export class IncomeSourceController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: '수입원 삭제' })
   @ApiResponse({ status: 200, description: '수입원이 삭제되었습니다.' })
   @ApiResponse({ status: 404, description: '수입원을 찾을 수 없습니다.' })
   remove(@Param('id', ParseUUIDPipe) id: string) {

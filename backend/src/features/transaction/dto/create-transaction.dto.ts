@@ -45,6 +45,12 @@ export class CreateTransactionDto {
   @IsOptional()
   @IsBoolean()
   isRecurring?: boolean;
+
+  @ApiPropertyOptional({ description: '투입 시간 (시간 단위)', example: 2.5 })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  hours?: number;
 }
 
 export class UpdateTransactionDto extends PartialType(CreateTransactionDto) {}

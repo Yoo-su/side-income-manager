@@ -9,7 +9,7 @@ export class DashboardController {
 
   @Get('summary')
   @ApiOperation({
-    summary: '대시보드 요약 — 이번 달/전월 비교 및 증감률',
+    summary: '대시보드 요약 조회 (이번 달/전월 비교)',
   })
   async getSummary() {
     return this.transactionService.getDashboardSummary();
@@ -17,7 +17,7 @@ export class DashboardController {
 
   @Get('portfolio')
   @ApiOperation({
-    summary: '수입원별 수익 포트폴리오 분포',
+    summary: '수입원별 수익 포트폴리오 비중 조회',
   })
   async getPortfolio() {
     return this.transactionService.getPortfolioDistribution();
@@ -25,7 +25,7 @@ export class DashboardController {
 
   @Get('monthly-stats')
   @ApiOperation({
-    summary: '월별 수익/지출/순수익 통계 (연도별 또는 최근 N개월)',
+    summary: '월별 통계 조회 (연도별 또는 최근 N개월)',
   })
   @ApiQuery({
     name: 'year',
@@ -51,7 +51,7 @@ export class DashboardController {
   }
 
   @Get('source-ranking')
-  @ApiOperation({ summary: '수입원별 수익 랭킹' })
+  @ApiOperation({ summary: '수입원별 수익 랭킹 조회' })
   async getSourceRanking() {
     return this.transactionService.getIncomeSourcePerformance();
   }

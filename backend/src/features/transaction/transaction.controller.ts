@@ -9,7 +9,7 @@ import {
   Query,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiQuery, ApiOperation } from '@nestjs/swagger';
 import { TransactionService } from './transaction.service';
 import {
   CreateTransactionDto,
@@ -23,6 +23,7 @@ export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
 
   @Post()
+  @ApiOperation({ summary: '거래 내역 생성' })
   @ApiResponse({
     status: 201,
     description: '거래 내역이 생성되었습니다.',
@@ -33,6 +34,7 @@ export class TransactionController {
   }
 
   @Get()
+  @ApiOperation({ summary: '모든 거래 내역 조회 (필터링 가능)' })
   @ApiResponse({
     status: 200,
     description: '모든 거래 내역을 반환합니다.',
@@ -51,6 +53,7 @@ export class TransactionController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: '특정 거래 내역 조회' })
   @ApiResponse({
     status: 200,
     description: '특정 거래 내역을 반환합니다.',
@@ -62,6 +65,7 @@ export class TransactionController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: '거래 내역 수정' })
   @ApiResponse({
     status: 200,
     description: '거래 내역이 수정되었습니다.',
@@ -75,6 +79,7 @@ export class TransactionController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: '거래 내역 삭제' })
   @ApiResponse({ status: 200, description: '거래 내역이 삭제되었습니다.' })
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.transactionService.remove(id);

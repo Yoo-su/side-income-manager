@@ -14,6 +14,11 @@ export class IncomeSourceService {
     private readonly incomeSourceRepository: Repository<IncomeSource>,
   ) {}
 
+  /**
+   * 새로운 수입원을 생성합니다.
+   * @param createIncomeSourceDto 수입원 생성 DTO
+   * @returns 생성된 수입원
+   */
   async create(
     createIncomeSourceDto: CreateIncomeSourceDto,
   ): Promise<IncomeSource> {
@@ -23,12 +28,22 @@ export class IncomeSourceService {
     return await this.incomeSourceRepository.save(incomeSource);
   }
 
+  /**
+   * 모든 수입원 목록을 조회합니다. (생성일 내림차순 정렬)
+   * @returns 수입원 목록
+   */
   async findAll(): Promise<IncomeSource[]> {
     return await this.incomeSourceRepository.find({
       order: { createdAt: 'DESC' },
     });
   }
 
+  /**
+   * 특정 ID의 수입원을 조회합니다.
+   * @param id 수입원 ID
+   * @returns 수입원 정보
+   * @throws NotFoundException 해당 ID의 수입원이 없을 경우
+   */
   async findOne(id: string): Promise<IncomeSource> {
     const incomeSource = await this.incomeSourceRepository.findOne({
       where: { id },
@@ -39,6 +54,12 @@ export class IncomeSourceService {
     return incomeSource;
   }
 
+  /**
+   * 수입원 정보를 수정합니다.
+   * @param id 수입원 ID
+   * @param updateIncomeSourceDto 수정할 데이터 DTO
+   * @returns 수정된 수입원 정보
+   */
   async update(
     id: string,
     updateIncomeSourceDto: UpdateIncomeSourceDto,
@@ -48,6 +69,11 @@ export class IncomeSourceService {
     return await this.incomeSourceRepository.save(incomeSource);
   }
 
+  /**
+   * 수입원을 삭제합니다.
+   * @param id 수입원 ID
+   * @throws NotFoundException 해당 ID의 수입원이 없을 경우
+   */
   async remove(id: string): Promise<void> {
     const result = await this.incomeSourceRepository.delete(id);
     if (result.affected === 0) {

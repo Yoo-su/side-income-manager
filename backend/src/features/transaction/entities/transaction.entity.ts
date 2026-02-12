@@ -31,7 +31,7 @@ export class Transaction {
   @Column({ type: 'enum', enum: TransactionType })
   type: TransactionType;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2 }) // Up to 999,999,999.99
+  @Column({ type: 'decimal', precision: 12, scale: 2 }) // 최대 999,999,999.99
   amount: number;
 
   @Column({ type: 'date' })
@@ -42,6 +42,9 @@ export class Transaction {
 
   @Column({ type: 'boolean', default: false })
   isRecurring: boolean; // 정기 결제 여부 (구독료 등)
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  hours: number | null; // 투입 시간 (시간 단위, 소수점 허용)
 
   @CreateDateColumn()
   createdAt: Date;

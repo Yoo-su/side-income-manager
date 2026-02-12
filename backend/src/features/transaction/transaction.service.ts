@@ -6,10 +6,11 @@ import {
   CreateTransactionDto,
   UpdateTransactionDto,
 } from './dto/create-transaction.dto';
+import { Decimal } from 'decimal.js';
 
 interface MonthlyStatRaw {
   month: string;
-  revenue: string; // SQL SUM returns string
+  revenue: string; // SQL SUM은 문자열을 반환함
   expense: string;
 }
 
@@ -27,6 +28,11 @@ export class TransactionService {
     private readonly transactionRepository: Repository<Transaction>,
   ) {}
 
+  /**
+   * 새로운 거래 내역을 생성합니다.
+   * @param createTransactionDto 거래 내역 생성 DTO
+   * @returns 생성된 거래 내역
+   */
   async create(
     createTransactionDto: CreateTransactionDto,
   ): Promise<Transaction> {
@@ -34,6 +40,10 @@ export class TransactionService {
     return await this.transactionRepository.save(transaction);
   }
 
+  /**
+   * 모든 거래 내역을 조회합니다. (날짜/생성일 내림차순 정렬)
+   * @returns 거래 내역 목록
+   */
   async findAll(): Promise<Transaction[]> {
     return await this.transactionRepository.find({
       order: { date: 'DESC', createdAt: 'DESC' },
@@ -41,6 +51,11 @@ export class TransactionService {
     });
   }
 
+  /**
+   * 특정 수입원의 거래 내역을 조회합니다.
+   * @param sourceId 수입원 ID
+   * @returns 해당 수입원의 거래 내역 목록
+   */
   async findAllBySourceId(sourceId: string): Promise<Transaction[]> {
     return await this.transactionRepository.find({
       where: { incomeSourceId: sourceId },
@@ -48,6 +63,12 @@ export class TransactionService {
     });
   }
 
+  /**
+   * 특정 ID의 거래 내역을 조회합니다.
+   * @param id 거래 내역 ID
+   * @returns 거래 내역 정보
+   * @throws NotFoundException 해당 ID의 거래 내역이 없을 경우
+   */
   async findOne(id: string): Promise<Transaction> {
     const transaction = await this.transactionRepository.findOne({
       where: { id },
@@ -59,6 +80,12 @@ export class TransactionService {
     return transaction;
   }
 
+  /**
+   * 거래 내역을 수정합니다.
+   * @param id 거래 내역 ID
+   * @param updateTransactionDto 수정할 데이터 DTO
+   * @returns 수정된 거래 내역
+   */
   async update(
     id: string,
     updateTransactionDto: UpdateTransactionDto,
@@ -68,6 +95,11 @@ export class TransactionService {
     return await this.transactionRepository.save(transaction);
   }
 
+  /**
+   * 거래 내역을 삭제합니다.
+   * @param id 거래 내역 ID
+   * @throws NotFoundException 해당 ID의 거래 내역이 없을 경우
+   */
   async remove(id: string): Promise<void> {
     const result = await this.transactionRepository.delete(id);
     if (result.affected === 0) {
@@ -75,29 +107,67 @@ export class TransactionService {
     }
   }
 
-  async getSummaryBySourceId(
-    sourceId: string,
-  ): Promise<{ revenue: number; expense: number; netProfit: number }> {
+  /**
+   * 특정 수입원의 요약 정보(수익, 지출, 순수익, ROI 등)를 계산합니다.
+   * @param sourceId 수입원 ID
+   * @returns 요약 정보 객체
+   */
+  async getSummaryBySourceId(sourceId: string): Promise<{
+    revenue: number;
+    expense: number;
+    netProfit: number;
+    totalHours: number;
+    hourlyRate: number;
+    roi: number;
+  }> {
     const transactions = await this.findAllBySourceId(sourceId);
 
-    let revenue = 0;
-    let expense = 0;
+    let revenue = new Decimal(0);
+    let expense = new Decimal(0);
+    let totalHours = new Decimal(0);
 
     transactions.forEach((tx) => {
-      const amount = Number(tx.amount);
+      const amount = new Decimal(tx.amount);
       if (tx.type === TransactionType.REVENUE) {
-        revenue += amount;
+        revenue = revenue.plus(amount);
       } else if (tx.type === TransactionType.EXPENSE) {
-        expense += amount;
+        expense = expense.plus(amount);
+      }
+
+      if (tx.hours) {
+        totalHours = totalHours.plus(new Decimal(tx.hours));
       }
     });
 
+    const netProfit = revenue.minus(expense);
+
+    // 시간당 수익 (순수익 / 총 투입 시간)
+    // 투입 시간이 0이면 0 반환
+    const hourlyRate = totalHours.greaterThan(0)
+      ? netProfit.dividedBy(totalHours).round().toNumber()
+      : 0;
+
+    // 투자 대비 수익률 (순수익 / 총 지출 * 100)
+    // 지출이 0이면 0 반환 (무한대 방지)
+    const roi = expense.greaterThan(0)
+      ? netProfit.dividedBy(expense).times(100).toDecimalPlaces(1).toNumber()
+      : 0;
+
     return {
-      revenue,
-      expense,
-      netProfit: revenue - expense,
+      revenue: revenue.toNumber(),
+      expense: expense.toNumber(),
+      netProfit: netProfit.toNumber(),
+      totalHours: totalHours.toNumber(),
+      hourlyRate,
+      roi,
     };
   }
+
+  /**
+   * 연도별 월간 통계(수익, 지출, 순수익)를 조회합니다.
+   * @param year 조회할 연도
+   * @returns 월별 통계 리스트
+   */
   async getMonthlyStats(
     year: number,
   ): Promise<
@@ -131,10 +201,17 @@ export class TransactionService {
       month: item.month,
       revenue: Number(item.revenue),
       expense: Number(item.expense),
-      netProfit: Number(item.revenue) - Number(item.expense),
+      netProfit: new Decimal(item.revenue)
+        .minus(new Decimal(item.expense))
+        .toNumber(),
     }));
   }
 
+  /**
+   * 최근 N개월간의 월별 통계를 조회합니다.
+   * @param limit 조회할 개월 수
+   * @returns 월별 통계 리스트
+   */
   async getRecentMonthlyStats(
     limit: number,
   ): Promise<
@@ -171,10 +248,17 @@ export class TransactionService {
       month: item.month,
       revenue: Number(item.revenue),
       expense: Number(item.expense),
-      netProfit: Number(item.revenue) - Number(item.expense),
+      netProfit: new Decimal(item.revenue)
+        .minus(new Decimal(item.expense))
+        .toNumber(),
     }));
   }
 
+  /**
+   * 수입원별 성과(순수익, 총매출, 총비용)를 조회합니다.
+   * 순수익 내림차순으로 정렬됩니다.
+   * @returns 수입원별 성과 리스트
+   */
   async getIncomeSourcePerformance(): Promise<
     {
       sourceId: string;
@@ -218,14 +302,29 @@ export class TransactionService {
     }));
   }
 
-  /** 대시보드 요약: 이번 달 / 전월 수익·지출·순수익 + 증감률 */
+  /**
+   * 대시보드 요약 정보를 조회합니다.
+   * 이번 달과 전월의 수익, 지출, 순수익, 투입 시간을 비교하고 증감률을 계산합니다.
+   * @returns 대시보드 요약 정보
+   */
   async getDashboardSummary(): Promise<{
-    currentMonth: { revenue: number; expense: number; netProfit: number };
-    previousMonth: { revenue: number; expense: number; netProfit: number };
+    currentMonth: {
+      revenue: number;
+      expense: number;
+      netProfit: number;
+      totalHours: number;
+    };
+    previousMonth: {
+      revenue: number;
+      expense: number;
+      netProfit: number;
+      totalHours: number;
+    };
     changeRate: {
       revenue: number | null;
       expense: number | null;
       netProfit: number | null;
+      totalHours: number | null;
     };
   }> {
     const now = new Date();
@@ -252,17 +351,28 @@ export class TransactionService {
           'COALESCE(SUM(CASE WHEN tx.type = :expense THEN tx.amount ELSE 0 END), 0)',
           'expense',
         )
+        .addSelect('COALESCE(SUM(tx.hours), 0)', 'totalHours')
         .where('tx.date >= :startDate', { startDate })
         .andWhere('tx.date < :endDate', { endDate })
         .setParameters({
           revenue: TransactionType.REVENUE,
           expense: TransactionType.EXPENSE,
         })
-        .getRawOne<{ revenue: string; expense: string }>();
+        .getRawOne<{
+          revenue: string;
+          expense: string;
+          totalHours: string;
+        }>();
 
-      const rev = Number(result?.revenue || 0);
-      const exp = Number(result?.expense || 0);
-      return { revenue: rev, expense: exp, netProfit: rev - exp };
+      const rev = new Decimal(result?.revenue || 0);
+      const exp = new Decimal(result?.expense || 0);
+      const hours = new Decimal(result?.totalHours || 0);
+      return {
+        revenue: rev.toNumber(),
+        expense: exp.toNumber(),
+        netProfit: rev.minus(exp).toNumber(),
+        totalHours: hours.toNumber(),
+      };
     };
 
     const current = await calcMonthStats(currentYear, currentMonth);
@@ -271,7 +381,12 @@ export class TransactionService {
     // 증감률 계산 (전월이 0이면 null 반환)
     const calcRate = (curr: number, prev: number): number | null => {
       if (prev === 0) return curr > 0 ? 100 : null;
-      return Math.round(((curr - prev) / prev) * 100);
+      return new Decimal(curr)
+        .minus(prev)
+        .dividedBy(prev)
+        .times(100)
+        .round()
+        .toNumber();
     };
 
     return {
@@ -281,11 +396,15 @@ export class TransactionService {
         revenue: calcRate(current.revenue, previous.revenue),
         expense: calcRate(current.expense, previous.expense),
         netProfit: calcRate(current.netProfit, previous.netProfit),
+        totalHours: calcRate(current.totalHours, previous.totalHours),
       },
     };
   }
 
-  /** 수입원별 수익 포트폴리오 분포 */
+  /**
+   * 수입원별 수익 포트폴리오(비중)를 계산합니다.
+   * @returns 수입원별 매출 비중 리스트
+   */
   async getPortfolioDistribution(): Promise<
     {
       sourceId: string;
@@ -310,23 +429,29 @@ export class TransactionService {
       .getRawMany<{ sourceId: string; name: string; revenue: string }>();
 
     const totalRevenue = result.reduce(
-      (sum, item) => sum + Number(item.revenue),
-      0,
+      (sum, item) => sum.plus(new Decimal(item.revenue)),
+      new Decimal(0),
     );
 
     return result.map((item) => {
-      const rev = Number(item.revenue);
+      const rev = new Decimal(item.revenue);
       return {
         sourceId: item.sourceId,
         name: item.name,
-        revenue: rev,
-        percentage:
-          totalRevenue > 0 ? Math.round((rev / totalRevenue) * 1000) / 10 : 0,
+        revenue: rev.toNumber(),
+        percentage: totalRevenue.greaterThan(0)
+          ? rev.dividedBy(totalRevenue).times(100).toDecimalPlaces(1).toNumber()
+          : 0,
       };
     });
   }
 
-  /** 특정 수입원의 월별 수익/지출 통계 */
+  /**
+   * 특정 수입원의 월별 통계(수익, 지출, 순수익)를 조회합니다.
+   * @param sourceId 수입원 ID
+   * @param limit 조회할 개월 수 (기본값: 6)
+   * @returns 월별 통계 리스트
+   */
   async getMonthlyStatsBySourceId(
     sourceId: string,
     limit: number = 6,
