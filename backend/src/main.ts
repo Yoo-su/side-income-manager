@@ -11,7 +11,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Side Income Manager API')
-    .setDescription('The Side Income Manager API description')
+    .setDescription('부수입 매니저 API 설명')
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);
