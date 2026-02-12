@@ -57,18 +57,26 @@ export function InsightCards({ data }: InsightCardsProps) {
             <Trophy className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-foreground">
-              {topProfit.name}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              순수익{" "}
-              <span className="font-medium text-foreground">
-                {topProfit.netProfit.toLocaleString()}원
-              </span>
-            </p>
-            <div className="mt-2 text-xs text-muted-foreground/80">
-              매출 {topProfit.totalRevenue.toLocaleString()}원
-            </div>
+            {topProfit ? (
+              <>
+                <div className="text-xl font-bold text-foreground">
+                  {topProfit.name}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  순수익{" "}
+                  <span className="font-medium text-foreground">
+                    {topProfit.netProfit.toLocaleString()}원
+                  </span>
+                </p>
+                <div className="mt-2 text-xs text-muted-foreground/80">
+                  매출 {topProfit.totalRevenue.toLocaleString()}원
+                </div>
+              </>
+            ) : (
+              <div className="text-sm text-muted-foreground py-4">
+                데이터가 부족합니다.
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -83,18 +91,26 @@ export function InsightCards({ data }: InsightCardsProps) {
             <Zap className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-foreground">
-              {topEfficiency.name}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              시간당{" "}
-              <span className="font-medium text-foreground">
-                {topEfficiency.hourlyRate.toLocaleString()}원
-              </span>
-            </p>
-            <div className="mt-2 text-xs text-muted-foreground/80">
-              {topEfficiency.totalHours}시간 투입
-            </div>
+            {topEfficiency ? (
+              <>
+                <div className="text-xl font-bold text-foreground">
+                  {topEfficiency.name}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  시간당{" "}
+                  <span className="font-medium text-foreground">
+                    {topEfficiency.hourlyRate.toLocaleString()}원
+                  </span>
+                </p>
+                <div className="mt-2 text-xs text-muted-foreground/80">
+                  {topEfficiency.totalHours}시간 투입
+                </div>
+              </>
+            ) : (
+              <div className="text-sm text-muted-foreground py-4">
+                데이터가 부족합니다.
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
@@ -109,16 +125,26 @@ export function InsightCards({ data }: InsightCardsProps) {
             <TrendingUp className="h-4 w-4 text-rose-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-foreground">
-              {topRoi.name}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              ROI{" "}
-              <span className="font-medium text-foreground">{topRoi.roi}%</span>
-            </p>
-            <div className="mt-2 text-xs text-muted-foreground/80">
-              비용 {topRoi.totalExpense.toLocaleString()}원
-            </div>
+            {topRoi ? (
+              <>
+                <div className="text-xl font-bold text-foreground">
+                  {topRoi.name}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  ROI{" "}
+                  <span className="font-medium text-foreground">
+                    {topRoi.roi}%
+                  </span>
+                </p>
+                <div className="mt-2 text-xs text-muted-foreground/80">
+                  비용 {topRoi.totalExpense.toLocaleString()}원
+                </div>
+              </>
+            ) : (
+              <div className="text-sm text-muted-foreground py-4">
+                데이터가 부족합니다.
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>

@@ -31,7 +31,10 @@ export function useCreateTransaction() {
         queryKey: ["transactions", "summary", variables.incomeSourceId],
       });
       // 대시보드 데이터도 갱신
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({
+        queryKey: ["dashboard"],
+        refetchType: "all",
+      });
       // 수입원 월별 통계 갱신
       queryClient.invalidateQueries({
         queryKey: ["income-sources", variables.incomeSourceId, "monthly-stats"],
@@ -58,7 +61,10 @@ export function useUpdateTransaction() {
           queryKey: ["income-sources", sourceId, "monthly-stats"],
         });
       }
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({
+        queryKey: ["dashboard"],
+        refetchType: "all",
+      });
     },
   });
 }
@@ -70,7 +76,10 @@ export function useDeleteTransaction() {
     mutationFn: (id: string) => transactionApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({
+        queryKey: ["dashboard"],
+        refetchType: "all",
+      });
     },
   });
 }

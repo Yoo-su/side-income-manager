@@ -358,8 +358,8 @@ export class TransactionService {
         : 0;
 
       return {
-        sourceId: item.sourceId,
-        name: item.name,
+        sourceId: item.sourceId || 'unknown',
+        name: item.name || '미지정 수입원',
         netProfit: netProfit.toNumber(),
         totalRevenue: totalRevenue.toNumber(),
         totalExpense: totalExpense.toNumber(),
@@ -529,8 +529,8 @@ export class TransactionService {
     return result.map((item) => {
       const rev = new Decimal(item.revenue);
       return {
-        sourceId: item.sourceId,
-        name: item.name,
+        sourceId: item.sourceId || 'unknown',
+        name: item.name || '미지정 수입원',
         revenue: rev.toNumber(),
         percentage: totalRevenue.greaterThan(0)
           ? rev.dividedBy(totalRevenue).times(100).toDecimalPlaces(1).toNumber()
