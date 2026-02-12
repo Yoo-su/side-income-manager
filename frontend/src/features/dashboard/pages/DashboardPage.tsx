@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { StatsCards } from "../components/StatsCards";
-import { TrendChart } from "../components/TrendChart";
 import { PortfolioSection } from "../components/PortfolioSection";
 import { InsightCards } from "../components/InsightCards";
-import { EfficiencyTreemap } from "../components/EfficiencyTreemap";
+import { DashboardChartSection } from "../components/DashboardChartSection";
 import { dashboardApi } from "../api/dashboard.api";
 import { PageTransition } from "@/components/layout/PageTransition";
 
@@ -95,52 +94,55 @@ export function DashboardPage() {
         <Separator className="my-2" />
 
         {/* 2. 인사이트 카드 (Yearly Highlights) */}
-        {isRankingLoading ? (
-          <div className="grid gap-4 md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <Skeleton className="h-4 w-[100px]" />
-                  <Skeleton className="h-4 w-4 rounded-full" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-7 w-[120px] mb-2" />
-                  <Skeleton className="h-3 w-[150px] mb-1" />
-                  <Skeleton className="h-3 w-[100px]" />
-                </CardContent>
-              </Card>
-            ))}
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold text-foreground">
+              수입원 인사이트
+            </h3>
           </div>
-        ) : (
-          <InsightCards data={rankingData || []} />
-        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* 3. 월별 추이 차트 (Trend - Last 6 Months) */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            {isTrendLoading ? (
-              <Skeleton className="h-[350px] w-full rounded-xl" />
-            ) : (
-              <TrendChart data={trendData || []} />
-            )}
-          </motion.div>
+          {isRankingLoading ? (
+            <div className="grid gap-4 md:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i}>
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <Skeleton className="h-4 w-[100px]" />
+                    <Skeleton className="h-4 w-4 rounded-full" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-7 w-[120px] mb-2" />
+                    <Skeleton className="h-3 w-[150px] mb-1" />
+                    <Skeleton className="h-3 w-[100px]" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <InsightCards data={rankingData || []} />
+          )}
+        </div>
 
-          {/* 4. 효율성 트리맵 (Yearly Efficiency) */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            {isRankingLoading ? (
-              <Skeleton className="h-[350px] w-full rounded-xl" />
-            ) : (
-              <EfficiencyTreemap data={rankingData || []} />
-            )}
-          </motion.div>
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h3 className="text-lg font-semibold text-foreground">
+              월별 추이 및 효율 분석
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <DashboardChartSection
+                trendData={trendData}
+                isTrendLoading={isTrendLoading}
+                rankingData={rankingData}
+                isRankingLoading={isRankingLoading}
+              />
+            </motion.div>
+          </div>
         </div>
 
         {/* 5. 수익 포트폴리오 (Yearly Portfolio) */}

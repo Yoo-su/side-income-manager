@@ -7,10 +7,15 @@ import { cn } from "@/lib/utils";
 interface TrendChartProps {
   data: MonthlyStat[];
   className?: string;
+  minimal?: boolean; // New prop
 }
 
 /** 월별 수익/지출 추이 + 순수익 라인 — ApexCharts Mixed Chart */
-export function TrendChart({ data, className }: TrendChartProps) {
+export function TrendChart({
+  data,
+  className,
+  minimal = false,
+}: TrendChartProps) {
   const categories = data.map((d) => `${d.month}`);
 
   const options: ApexOptions = {
@@ -22,8 +27,8 @@ export function TrendChart({ data, className }: TrendChartProps) {
       fontFamily: "Pretendard Variable, sans-serif",
       background: "transparent",
     },
-    // 수익: Indigo, 지출: Rose, 순수익: Emerald
-    colors: ["#6366f1", "#f43f5e", "#10b981"],
+    // 수익: Soft Blue, 지출: Soft Rose, 순수익: Soft Emerald
+    colors: ["#60a5fa", "#fb7185", "#34d399"],
 
     plotOptions: {
       bar: {
@@ -39,7 +44,7 @@ export function TrendChart({ data, className }: TrendChartProps) {
     markers: {
       size: 5,
       colors: ["#fff"],
-      strokeColors: "#10b981",
+      strokeColors: "#34d399",
       strokeWidth: 2,
       hover: {
         size: 7,
@@ -86,6 +91,19 @@ export function TrendChart({ data, className }: TrendChartProps) {
     { name: "지출", type: "bar", data: data.map((d) => d.expense) },
     { name: "순수익", type: "line", data: data.map((d) => d.netProfit) },
   ];
+
+  if (minimal) {
+    return (
+      <div className={className}>
+        <ReactApexChart
+          options={options}
+          series={series}
+          type="line"
+          height={340}
+        />
+      </div>
+    );
+  }
 
   return (
     <Card
