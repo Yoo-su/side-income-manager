@@ -15,7 +15,7 @@ import { DashboardModule } from './features/dashboard/dashboard.module';
       type: 'postgres',
       url: process.env.DATABASE_URL,
       autoLoadEntities: true,
-      synchronize: true, // TODO: Disable in production or use migrations
+      synchronize: process.env.NODE_ENV === 'development',
     }),
     IncomeSourceModule,
     TransactionModule,
