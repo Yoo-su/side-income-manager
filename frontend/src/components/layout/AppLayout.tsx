@@ -16,7 +16,10 @@ export function AppLayout() {
       <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col border-r border-border bg-white">
         {/* 로고 영역 */}
         <div className="flex h-16 items-center px-6 border-b border-border">
-          <span className="text-lg font-semibold tracking-tight text-foreground">
+          <span
+            className="text-2xl text-foreground select-none"
+            style={{ fontFamily: '"Moirai One", system-ui' }}
+          >
             부수입 매니저
           </span>
         </div>
