@@ -11,25 +11,27 @@ import { PageTransition } from "@/components/layout/PageTransition";
 import { DateFilter } from "../components/DateFilter";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const year = selectedDate.getFullYear();
   const month = selectedDate.getMonth() + 1;
 
-  const { data: summary } = useQuery({
+  const { data: summary, isLoading: isSummaryLoading } = useQuery({
     queryKey: ["dashboard", "summary", year, month],
     queryFn: () => dashboardApi.getSummary(year, month),
     placeholderData: (previousData) => previousData,
   });
 
-  const { data: trendData } = useQuery({
+  const { data: trendData, isLoading: isTrendLoading } = useQuery({
     queryKey: ["dashboard", "trend"], // 월별 추이는 연간 데이터이므로 필터링 제외 (혹은 year만 전달?)
     // 최근 6개월 데이터 조회
     queryFn: () => dashboardApi.getMonthlyStats(undefined, 6), // 최근 6개월 데이터 조회
   });
 
-  const { data: rankingData } = useQuery({
+  const { data: rankingData, isLoading: isRankingLoading } = useQuery({
     queryKey: ["dashboard", "ranking", year], // 랭킹/포트폴리오는 '연간' 기준으로 변경 (user request: filtering limited to cards)
     queryFn: () => dashboardApi.getSourceRanking(year),
     placeholderData: (previousData) => previousData,
@@ -63,19 +65,55 @@ export function DashboardPage() {
               onDateChange={setSelectedDate}
             />
           </div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            {summary && <StatsCards summary={summary} month={month} />}
+            {isSummaryLoading ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Card key={i}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <Skeleton className="h-4 w-[100px]" />
+                      <Skeleton className="h-4 w-4 rounded-full" />
+                    </CardHeader>
+                    <CardContent>
+                      <Skeleton className="h-8 w-[120px] mb-2" />
+                      <Skeleton className="h-3 w-[80px]" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              summary && <StatsCards summary={summary} month={month} />
+            )}
           </motion.div>
         </div>
 
         <Separator className="my-2" />
 
         {/* 2. 인사이트 카드 (Yearly Highlights) */}
-        <InsightCards data={rankingData || []} />
+        {isRankingLoading ? (
+          <div className="grid gap-4 md:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <Skeleton className="h-4 w-[100px]" />
+                  <Skeleton className="h-4 w-4 rounded-full" />
+                </CardHeader>
+                <CardContent>
+                  <Skeleton className="h-7 w-[120px] mb-2" />
+                  <Skeleton className="h-3 w-[150px] mb-1" />
+                  <Skeleton className="h-3 w-[100px]" />
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <InsightCards data={rankingData || []} />
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* 3. 월별 추이 차트 (Trend - Last 6 Months) */}
@@ -84,7 +122,11 @@ export function DashboardPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <TrendChart data={trendData || []} />
+            {isTrendLoading ? (
+              <Skeleton className="h-[350px] w-full rounded-xl" />
+            ) : (
+              <TrendChart data={trendData || []} />
+            )}
           </motion.div>
 
           {/* 4. 효율성 트리맵 (Yearly Efficiency) */}
@@ -93,7 +135,11 @@ export function DashboardPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <EfficiencyTreemap data={rankingData || []} />
+            {isRankingLoading ? (
+              <Skeleton className="h-[350px] w-full rounded-xl" />
+            ) : (
+              <EfficiencyTreemap data={rankingData || []} />
+            )}
           </motion.div>
         </div>
 
@@ -103,7 +149,11 @@ export function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <PortfolioSection data={rankingData || []} />
+          {isRankingLoading ? (
+            <Skeleton className="h-[300px] w-full rounded-xl" />
+          ) : (
+            <PortfolioSection data={rankingData || []} />
+          )}
         </motion.div>
       </div>
     </PageTransition>
