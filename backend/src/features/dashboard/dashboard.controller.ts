@@ -1,6 +1,7 @@
 import { Controller, Get, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { TransactionService } from '../transaction/transaction.service';
+import { SourcePerformanceDto } from './dto/source-performance.dto';
 
 @ApiTags('Dashboard')
 @Controller('dashboard')
@@ -11,16 +12,26 @@ export class DashboardController {
   @ApiOperation({
     summary: '대시보드 요약 조회 (이번 달/전월 비교)',
   })
-  async getSummary() {
-    return this.transactionService.getDashboardSummary();
+  @ApiQuery({ name: 'year', required: false })
+  @ApiQuery({ name: 'month', required: false })
+  async getSummary(
+    @Query('year') year?: number,
+    @Query('month') month?: number,
+  ) {
+    return this.transactionService.getDashboardSummary(year, month);
   }
 
   @Get('portfolio')
   @ApiOperation({
     summary: '수입원별 수익 포트폴리오 비중 조회',
   })
-  async getPortfolio() {
-    return this.transactionService.getPortfolioDistribution();
+  @ApiQuery({ name: 'year', required: false })
+  @ApiQuery({ name: 'month', required: false })
+  async getPortfolio(
+    @Query('year') year?: number,
+    @Query('month') month?: number,
+  ) {
+    return this.transactionService.getPortfolioDistribution(year, month);
   }
 
   @Get('monthly-stats')
@@ -51,8 +62,20 @@ export class DashboardController {
   }
 
   @Get('source-ranking')
-  @ApiOperation({ summary: '수입원별 수익 랭킹 조회' })
-  async getSourceRanking() {
-    return this.transactionService.getIncomeSourcePerformance();
+  @ApiOperation({
+    summary: '수입원별 수익 랭킹 및 효율 지표 조회',
+    description:
+      '순수익, 매출, 비용뿐만 아니라 시간당 수익, ROI 등 효율성 지표를 포함하여 반환합니다.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '수입원별 성과 리스트',
+    type: [SourcePerformanceDto],
+  })
+  async getSourceRanking(
+    @Query('year') year?: number,
+    @Query('month') month?: number,
+  ): Promise<SourcePerformanceDto[]> {
+    return this.transactionService.getIncomeSourcePerformance(year, month);
   }
 }

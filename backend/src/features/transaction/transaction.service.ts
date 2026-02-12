@@ -110,9 +110,15 @@ export class TransactionService {
   /**
    * 특정 수입원의 요약 정보(수익, 지출, 순수익, ROI 등)를 계산합니다.
    * @param sourceId 수입원 ID
+   * @param year 조회할 연도 (선택)
+   * @param month 조회할 월 (선택)
    * @returns 요약 정보 객체
    */
-  async getSummaryBySourceId(sourceId: string): Promise<{
+  async getSummaryBySourceId(
+    sourceId: string,
+    year?: number,
+    month?: number,
+  ): Promise<{
     revenue: number;
     expense: number;
     netProfit: number;
@@ -120,7 +126,20 @@ export class TransactionService {
     hourlyRate: number;
     roi: number;
   }> {
-    const transactions = await this.findAllBySourceId(sourceId);
+    const query = this.transactionRepository
+      .createQueryBuilder('tx')
+      .where('tx.incomeSourceId = :sourceId', { sourceId });
+
+    if (year && month) {
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 1); // 다음 달 1일
+      query.andWhere('tx.date >= :startDate AND tx.date < :endDate', {
+        startDate,
+        endDate,
+      });
+    }
+
+    const transactions = await query.getMany();
 
     let revenue = new Decimal(0);
     let expense = new Decimal(0);
@@ -142,13 +161,11 @@ export class TransactionService {
     const netProfit = revenue.minus(expense);
 
     // 시간당 수익 (순수익 / 총 투입 시간)
-    // 투입 시간이 0이면 0 반환
     const hourlyRate = totalHours.greaterThan(0)
       ? netProfit.dividedBy(totalHours).round().toNumber()
       : 0;
 
     // 투자 대비 수익률 (순수익 / 총 지출 * 100)
-    // 지출이 0이면 0 반환 (무한대 방지)
     const roi = expense.greaterThan(0)
       ? netProfit.dividedBy(expense).times(100).toDecimalPlaces(1).toNumber()
       : 0;
@@ -255,19 +272,29 @@ export class TransactionService {
   }
 
   /**
-   * 수입원별 성과(순수익, 총매출, 총비용)를 조회합니다.
+   * 수입원별 성과(순수익, 총매출, 총비용, 효율성 지표)를 조회합니다.
+   * 특정 연/월이 주어지면 해당 기간으로 필터링합니다.
    * 순수익 내림차순으로 정렬됩니다.
-   * @returns 수입원별 성과 리스트
+   * @param year 조회할 연도 (선택)
+   * @param month 조회할 월 (선택)
+   * @returns 수입원별 성과 리스트 (순수익, 매출, 비용, 시간, ROI, 시간당 수익 포함)
    */
-  async getIncomeSourcePerformance(): Promise<
+  async getIncomeSourcePerformance(
+    year?: number,
+    month?: number,
+  ): Promise<
     {
       sourceId: string;
       name: string;
       netProfit: number;
       totalRevenue: number;
+      totalExpense: number;
+      totalHours: number;
+      roi: number;
+      hourlyRate: number;
     }[]
   > {
-    const result = await this.transactionRepository
+    const query = this.transactionRepository
       .createQueryBuilder('transaction')
       .leftJoinAndSelect('transaction.incomeSource', 'source')
       .select('source.id', 'sourceId')
@@ -284,6 +311,21 @@ export class TransactionService {
         'SUM(CASE WHEN transaction.type = :expense THEN transaction.amount ELSE 0 END)',
         'totalExpense',
       )
+      .addSelect('COALESCE(SUM(transaction.hours), 0)', 'totalHours');
+
+    if (year && month) {
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 1);
+      query.where(
+        'transaction.date >= :startDate AND transaction.date < :endDate',
+        {
+          startDate,
+          endDate,
+        },
+      );
+    }
+
+    const result = await query
       .groupBy('source.id')
       .addGroupBy('source.name')
       .orderBy('"netProfit"', 'DESC')
@@ -291,23 +333,54 @@ export class TransactionService {
         revenue: TransactionType.REVENUE,
         expense: TransactionType.EXPENSE,
       })
-      .getRawMany<SourcePerformanceRaw & { totalExpense: string }>();
+      .getRawMany<
+        SourcePerformanceRaw & { totalExpense: string; totalHours: string }
+      >();
 
-    return result.map((item) => ({
-      sourceId: item.sourceId,
-      name: item.name,
-      netProfit: Number(item.netProfit),
-      totalRevenue: Number(item.totalRevenue),
-      totalExpense: Number(item.totalExpense),
-    }));
+    return result.map((item) => {
+      const netProfit = new Decimal(item.netProfit);
+      const totalRevenue = new Decimal(item.totalRevenue);
+      const totalExpense = new Decimal(item.totalExpense);
+      const totalHours = new Decimal(item.totalHours);
+
+      // 시간당 수익
+      const hourlyRate = totalHours.greaterThan(0)
+        ? netProfit.dividedBy(totalHours).round().toNumber()
+        : 0;
+
+      // ROI
+      const roi = totalExpense.greaterThan(0)
+        ? netProfit
+            .dividedBy(totalExpense)
+            .times(100)
+            .toDecimalPlaces(1)
+            .toNumber()
+        : 0;
+
+      return {
+        sourceId: item.sourceId,
+        name: item.name,
+        netProfit: netProfit.toNumber(),
+        totalRevenue: totalRevenue.toNumber(),
+        totalExpense: totalExpense.toNumber(),
+        totalHours: totalHours.toNumber(),
+        hourlyRate,
+        roi,
+      };
+    });
   }
 
   /**
    * 대시보드 요약 정보를 조회합니다.
-   * 이번 달과 전월의 수익, 지출, 순수익, 투입 시간을 비교하고 증감률을 계산합니다.
+   * 선택된 년/월과 그 전월(혹은 전년 동월)의 수익, 지출, 순수익, 투입 시간을 비교하고 증감률을 계산합니다.
+   * @param year 조회할 연도 (기본: 현재)
+   * @param month 조회할 월 (기본: 현재)
    * @returns 대시보드 요약 정보
    */
-  async getDashboardSummary(): Promise<{
+  async getDashboardSummary(
+    year?: number,
+    month?: number,
+  ): Promise<{
     currentMonth: {
       revenue: number;
       expense: number;
@@ -328,18 +401,16 @@ export class TransactionService {
     };
   }> {
     const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1;
+    const currentYear = year || now.getFullYear();
+    const currentMonth = month || now.getMonth() + 1;
 
     // 전월 연/월 계산
     const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
     const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
 
-    const calcMonthStats = async (year: number, month: number) => {
-      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-      const nextMonth = month === 12 ? 1 : month + 1;
-      const nextYear = month === 12 ? year + 1 : year;
-      const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+    const calcMonthStats = async (y: number, m: number) => {
+      const startDate = new Date(y, m - 1, 1);
+      const endDate = new Date(y, m, 1);
 
       const result = await this.transactionRepository
         .createQueryBuilder('tx')
@@ -352,8 +423,10 @@ export class TransactionService {
           'expense',
         )
         .addSelect('COALESCE(SUM(tx.hours), 0)', 'totalHours')
-        .where('tx.date >= :startDate', { startDate })
-        .andWhere('tx.date < :endDate', { endDate })
+        .where('tx.date >= :startDate AND tx.date < :endDate', {
+          startDate,
+          endDate,
+        })
         .setParameters({
           revenue: TransactionType.REVENUE,
           expense: TransactionType.EXPENSE,
@@ -380,7 +453,10 @@ export class TransactionService {
 
     // 증감률 계산 (전월이 0이면 null 반환)
     const calcRate = (curr: number, prev: number): number | null => {
-      if (prev === 0) return curr > 0 ? 100 : null;
+      if (prev === 0) return curr > 0 ? 100 : null; // 전월이 0인데 이번달 실적이 있으면 100% 성장으로 표시?
+      // 혹은 0 -> 0 이면 0%
+      if (prev === 0 && curr === 0) return 0;
+
       return new Decimal(curr)
         .minus(prev)
         .dividedBy(prev)
@@ -403,9 +479,15 @@ export class TransactionService {
 
   /**
    * 수입원별 수익 포트폴리오(비중)를 계산합니다.
+   * 특정 연/월이 주어지면 해당 기간으로 필터링합니다.
+   * @param year 조회할 연도 (선택)
+   * @param month 조회할 월 (선택)
    * @returns 수입원별 매출 비중 리스트
    */
-  async getPortfolioDistribution(): Promise<
+  async getPortfolioDistribution(
+    year?: number,
+    month?: number,
+  ): Promise<
     {
       sourceId: string;
       name: string;
@@ -413,7 +495,7 @@ export class TransactionService {
       percentage: number;
     }[]
   > {
-    const result = await this.transactionRepository
+    const query = this.transactionRepository
       .createQueryBuilder('tx')
       .leftJoin('tx.incomeSource', 'source')
       .select('source.id', 'sourceId')
@@ -421,7 +503,18 @@ export class TransactionService {
       .addSelect(
         'COALESCE(SUM(CASE WHEN tx.type = :revenue THEN tx.amount ELSE 0 END), 0)',
         'revenue',
-      )
+      );
+
+    if (year && month) {
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 1);
+      query.where('tx.date >= :startDate AND tx.date < :endDate', {
+        startDate,
+        endDate,
+      });
+    }
+
+    const result = await query
       .groupBy('source.id')
       .addGroupBy('source.name')
       .orderBy('revenue', 'DESC')
