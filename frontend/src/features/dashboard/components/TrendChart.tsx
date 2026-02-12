@@ -18,6 +18,7 @@ export function TrendChart({ data, className }: TrendChartProps) {
       type: "bar",
       stacked: false,
       toolbar: { show: false },
+      zoom: { enabled: false }, // 마우스 스크롤 줌 비활성화
       fontFamily: "Pretendard Variable, sans-serif",
       background: "transparent",
     },

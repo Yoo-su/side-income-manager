@@ -14,6 +14,7 @@ import type { DashboardSummary } from "../types";
 
 interface StatsCardsProps {
   summary?: DashboardSummary;
+  month?: number;
 }
 
 interface LocalMonthlyStat {
@@ -24,7 +25,7 @@ interface LocalMonthlyStat {
 }
 
 /** 통계 카드 — 전월 대비 증감 표시 및 모노크롬 디자인 */
-export function StatsCards({ summary }: StatsCardsProps) {
+export function StatsCards({ summary, month }: StatsCardsProps) {
   const current = (summary?.currentMonth || {
     revenue: 0,
     expense: 0,
@@ -39,6 +40,8 @@ export function StatsCards({ summary }: StatsCardsProps) {
     totalHours: 0,
   }) as unknown as LocalMonthlyStat;
 
+  const monthLabel = month ? `${month}월` : "이번 달";
+
   interface CardItem {
     title: string;
     value: number;
@@ -50,7 +53,7 @@ export function StatsCards({ summary }: StatsCardsProps) {
 
   const cards: CardItem[] = [
     {
-      title: "이번 달 순수익",
+      title: `${monthLabel} 순수익`,
       value: current.netProfit,
       diff: diff.netProfit,
       icon: BarChart3,

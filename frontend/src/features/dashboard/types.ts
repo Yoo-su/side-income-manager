@@ -1,6 +1,21 @@
-import type { MonthlyStat, SourcePerformance } from "./api/dashboard.api";
+export interface MonthlyStat {
+  month: string;
+  revenue: number;
+  expense: number;
+  netProfit: number;
+  year?: number;
+}
 
-export type { MonthlyStat, SourcePerformance };
+export interface SourcePerformance {
+  sourceId: string;
+  name: string;
+  netProfit: number;
+  totalRevenue: number;
+  totalExpense: number;
+  totalHours: number;
+  roi: number;
+  hourlyRate: number;
+}
 
 export interface DashboardSummary {
   currentMonth: {
