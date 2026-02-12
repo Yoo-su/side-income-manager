@@ -21,7 +21,6 @@ export function DashboardPage() {
   const { data: summary, isLoading: isSummaryLoading } = useQuery({
     queryKey: ["dashboard", "summary", year, month],
     queryFn: () => dashboardApi.getSummary(year, month),
-    placeholderData: (previousData) => previousData,
   });
 
   const { data: trendData, isLoading: isTrendLoading } = useQuery({
