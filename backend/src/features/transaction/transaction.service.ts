@@ -128,6 +128,7 @@ export class TransactionService {
   }> {
     const query = this.transactionRepository
       .createQueryBuilder('tx')
+      .leftJoin('tx.incomeSource', 'source') // Join incomeSource
       .where('tx.incomeSourceId = :sourceId', { sourceId });
 
     if (year && month) {
@@ -195,6 +196,7 @@ export class TransactionService {
 
     const result = await this.transactionRepository
       .createQueryBuilder('transaction')
+      .leftJoin('transaction.incomeSource', 'source') // Join
       .select("TO_CHAR(transaction.date, 'YYYY-MM')", 'month')
       .addSelect(
         'SUM(CASE WHEN transaction.type = :revenue THEN transaction.amount ELSE 0 END)',
@@ -206,6 +208,7 @@ export class TransactionService {
       )
       .where('transaction.date >= :startDate', { startDate })
       .andWhere('transaction.date < :endDate', { endDate })
+      .andWhere('source.isActive = true') // Filter active
       .groupBy("TO_CHAR(transaction.date, 'YYYY-MM')")
       .orderBy('month', 'ASC')
       .setParameters({
@@ -242,6 +245,7 @@ export class TransactionService {
 
     const result = await this.transactionRepository
       .createQueryBuilder('transaction')
+      .leftJoin('transaction.incomeSource', 'source') // Join
       .select("TO_CHAR(transaction.date, 'YYYY-MM')", 'month')
       .addSelect(
         'SUM(CASE WHEN transaction.type = :revenue THEN transaction.amount ELSE 0 END)',
@@ -253,6 +257,7 @@ export class TransactionService {
       )
       .where('transaction.date >= :startDate', { startDate })
       .andWhere('transaction.date <= :endDate', { endDate })
+      .andWhere('source.isActive = true') // Filter active
       .groupBy("TO_CHAR(transaction.date, 'YYYY-MM')")
       .orderBy('month', 'ASC')
       .setParameters({
@@ -311,12 +316,13 @@ export class TransactionService {
         'SUM(CASE WHEN transaction.type = :expense THEN transaction.amount ELSE 0 END)',
         'totalExpense',
       )
-      .addSelect('COALESCE(SUM(transaction.hours), 0)', 'totalHours');
+      .addSelect('COALESCE(SUM(transaction.hours), 0)', 'totalHours')
+      .where('source.isActive = true'); // Filter active
 
     if (year && month) {
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 1);
-      query.where(
+      query.andWhere(
         'transaction.date >= :startDate AND transaction.date < :endDate',
         {
           startDate,
@@ -414,6 +420,7 @@ export class TransactionService {
 
       const result = await this.transactionRepository
         .createQueryBuilder('tx')
+        .leftJoin('tx.incomeSource', 'source') // Join
         .select(
           'COALESCE(SUM(CASE WHEN tx.type = :revenue THEN tx.amount ELSE 0 END), 0)',
           'revenue',
@@ -427,6 +434,7 @@ export class TransactionService {
           startDate,
           endDate,
         })
+        .andWhere('source.isActive = true') // Filter active
         .setParameters({
           revenue: TransactionType.REVENUE,
           expense: TransactionType.EXPENSE,
@@ -453,9 +461,11 @@ export class TransactionService {
 
     // 증감률 계산 (전월이 0이면 null 반환)
     const calcRate = (curr: number, prev: number): number | null => {
-      if (prev === 0) return curr > 0 ? 100 : null; // 전월이 0인데 이번달 실적이 있으면 100% 성장으로 표시?
-      // 혹은 0 -> 0 이면 0%
+      // 0 -> 0 이면 0% (변동 없음)
       if (prev === 0 && curr === 0) return 0;
+
+      // 전월이 0인데 이번달 실적이 있으면 100% 성장으로 표시
+      if (prev === 0) return curr > 0 ? 100 : 0;
 
       return new Decimal(curr)
         .minus(prev)
@@ -503,12 +513,13 @@ export class TransactionService {
       .addSelect(
         'COALESCE(SUM(CASE WHEN tx.type = :revenue THEN tx.amount ELSE 0 END), 0)',
         'revenue',
-      );
+      )
+      .where('source.isActive = true'); // Filter active
 
     if (year && month) {
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 1);
-      query.where('tx.date >= :startDate AND tx.date < :endDate', {
+      query.andWhere('tx.date >= :startDate AND tx.date < :endDate', {
         startDate,
         endDate,
       });
@@ -582,5 +593,110 @@ export class TransactionService {
       expense: Number(item.expense),
       netProfit: Number(item.revenue) - Number(item.expense),
     }));
+  }
+
+  /**
+   * 최근 N개월간 상위 5개 수입원의 월별 매출 추이를 조회합니다.
+   * @param limit 조회할 개월 수
+   * @returns 월별/수입원별 매출 데이터
+   */
+  async getMonthlyRevenuePatterns(limit: number): Promise<
+    {
+      month: string;
+      sourceId: string;
+      sourceName: string;
+      revenue: number;
+    }[]
+  > {
+    // 1. 기간 설정 (Upper Bound 추가)
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - limit + 1);
+    startDate.setDate(1);
+
+    // 2. 기간 내 매출 합계 기준 Top 5 수입원 선정 (활성 상태인 것만)
+    const topSources = await this.transactionRepository
+      .createQueryBuilder('tx')
+      .leftJoin('tx.incomeSource', 'source')
+      .select('source.id', 'id')
+      .addSelect('source.name', 'name') // name도 같이 가져오기
+      .addSelect('SUM(tx.amount)', 'total')
+      .where('tx.date >= :startDate', { startDate })
+      .andWhere('tx.date <= :endDate', { endDate }) // 미래 데이터 방지
+      .andWhere('tx.type = :type', { type: TransactionType.REVENUE })
+      .andWhere('source.isActive = true')
+      .groupBy('source.id')
+      .addGroupBy('source.name')
+      .orderBy('total', 'DESC')
+      .limit(5)
+      .getRawMany<{ id: string; name: string; total: string }>();
+
+    if (topSources.length === 0) {
+      return [];
+    }
+
+    const sourceIds = topSources.map((s) => s.id);
+    const sourceMap = new Map(topSources.map((s) => [s.id, s.name]));
+
+    // 3. 선정된 수입원들의 월별 매출 조회
+    const rawResult = await this.transactionRepository
+      .createQueryBuilder('tx')
+      .leftJoin('tx.incomeSource', 'source')
+      .select("TO_CHAR(tx.date, 'YYYY-MM')", 'month')
+      .addSelect('source.id', 'sourceId')
+      .addSelect('SUM(tx.amount)', 'revenue')
+      .where('tx.date >= :startDate', { startDate })
+      .andWhere('tx.date <= :endDate', { endDate })
+      .andWhere('tx.type = :type', { type: TransactionType.REVENUE })
+      .andWhere('source.id IN (:...sourceIds)', { sourceIds })
+      .groupBy("TO_CHAR(tx.date, 'YYYY-MM')")
+      .addGroupBy('source.id')
+      .orderBy('month', 'ASC')
+      .getRawMany<{
+        month: string;
+        sourceId: string;
+        revenue: string;
+      }>();
+
+    // 4. Zero-Filling 및 데이터 포맷팅
+    // 4-1. 모든 월 리스트 생성 (YYYY-MM)
+    const allMonths: string[] = [];
+    for (let i = 0; i < limit; i++) {
+      const d = new Date(startDate);
+      d.setMonth(d.getMonth() + i);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      allMonths.push(`${y}-${m}`);
+    }
+
+    // 4-2. 결과 매핑 (소스별 x 월별 => 없으면 0)
+    const finalResult: {
+      month: string;
+      sourceId: string;
+      sourceName: string;
+      revenue: number;
+    }[] = [];
+
+    // Top 5 소스 각각에 대해 모든 월 데이터 생성
+    sourceIds.forEach((sId) => {
+      const sName = sourceMap.get(sId) || 'Unknown';
+
+      allMonths.forEach((m) => {
+        // 해당 소스 + 해당 월의 데이터 찾기
+        const found = rawResult.find(
+          (r) =>
+            r.sourceId === sId && (r.month === m || (r as any).to_char === m),
+        );
+
+        finalResult.push({
+          month: m,
+          sourceId: sId,
+          sourceName: sName,
+          revenue: found ? Number(found.revenue) : 0,
+        });
+      });
+    });
+
+    return finalResult;
   }
 }

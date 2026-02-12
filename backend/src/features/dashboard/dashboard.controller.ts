@@ -78,4 +78,19 @@ export class DashboardController {
   ): Promise<SourcePerformanceDto[]> {
     return this.transactionService.getIncomeSourcePerformance(year, month);
   }
+  @Get('monthly-revenue-by-source')
+  @ApiOperation({
+    summary: '월별 수입원별 매출 추이 조회 (Top 5)',
+    description:
+      '최근 N개월간 매출 상위 5개 수입원의 월별 매출 흐름을 조회합니다.',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '조회할 개월 수 (기본: 6)',
+  })
+  async getMonthlyRevenueBySource(@Query('limit') limit?: number) {
+    return this.transactionService.getMonthlyRevenuePatterns(limit || 6);
+  }
 }

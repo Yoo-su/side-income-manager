@@ -55,4 +55,22 @@ export const dashboardApi = {
     );
     return response.data;
   },
+  getMonthlyRevenueBySource: async (
+    limit?: number,
+  ): Promise<
+    {
+      month: string;
+      sourceId: string;
+      sourceName: string;
+      revenue: number;
+    }[]
+  > => {
+    const response = await instance.get(
+      "/dashboard/monthly-revenue-by-source",
+      {
+        params: { limit },
+      },
+    );
+    return response.data;
+  },
 };
