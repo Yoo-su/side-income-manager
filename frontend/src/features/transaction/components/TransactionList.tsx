@@ -73,8 +73,8 @@ export function TransactionList({
               <span
                 className={
                   isRevenue
-                    ? "text-sm font-semibold text-foreground"
-                    : "text-sm font-semibold text-muted-foreground"
+                    ? "text-sm font-semibold text-emerald-600"
+                    : "text-sm font-semibold text-rose-600"
                 }
               >
                 {isRevenue ? "+" : "-"} {Number(tx.amount).toLocaleString()}원
