@@ -49,6 +49,7 @@ export function StatsCards({ summary, month }: StatsCardsProps) {
     icon: LucideIcon;
     prefix: string;
     suffix?: string;
+    valueClassName?: string;
   }
 
   const cards: CardItem[] = [
@@ -58,28 +59,32 @@ export function StatsCards({ summary, month }: StatsCardsProps) {
       diff: diff.netProfit,
       icon: BarChart3,
       prefix: current.netProfit >= 0 ? "+" : "",
+      valueClassName: "text-blue-600", // 순수익: 신뢰의 블루
     },
     {
-      title: "총 수익",
+      title: `${monthLabel} 총 수익`,
       value: current.revenue,
       diff: diff.revenue,
       icon: TrendingUp,
       prefix: "+",
+      valueClassName: "text-emerald-600", // 수익: 긍정의 에메랄드
     },
     {
-      title: "총 지출",
+      title: `${monthLabel} 총 지출`,
       value: current.expense,
       diff: diff.expense,
       icon: TrendingDown,
       prefix: "-",
+      valueClassName: "text-rose-600", // 지출: 경고의 로즈
     },
     {
-      title: "총 투입 시간",
+      title: `${monthLabel} 투입 시간`,
       value: current.totalHours,
       diff: diff.totalHours,
       icon: Clock,
       prefix: "",
       suffix: "시간",
+      valueClassName: "text-foreground",
     },
   ];
 
@@ -110,7 +115,9 @@ export function StatsCards({ summary, month }: StatsCardsProps) {
                 <card.icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-foreground">
+                <div
+                  className={`text-2xl font-bold ${card.valueClassName || "text-foreground"}`}
+                >
                   {card.prefix}
                   {card.value.toLocaleString()}
                   {card.suffix ? card.suffix : "원"}

@@ -146,6 +146,7 @@ export function IncomeSourceDetail() {
       prefix: (summary?.netProfit || 0) >= 0 ? "+" : "",
       emphasis: true,
       format: (val: number) => `${val.toLocaleString()}원`,
+      className: "text-blue-600",
     },
     {
       title: "총 수익",
@@ -153,6 +154,7 @@ export function IncomeSourceDetail() {
       prefix: "+",
       emphasis: false,
       format: (val: number) => `${val.toLocaleString()}원`,
+      className: "text-emerald-600",
     },
     {
       title: "총 지출",
@@ -160,6 +162,7 @@ export function IncomeSourceDetail() {
       prefix: "-",
       emphasis: false,
       format: (val: number) => `${val.toLocaleString()}원`,
+      className: "text-rose-600",
     },
     {
       title: "시간당 수익",
@@ -242,9 +245,11 @@ export function IncomeSourceDetail() {
                     <div
                       className={cn(
                         "text-lg lg:text-xl font-bold tracking-tight whitespace-nowrap",
-                        card.emphasis
-                          ? "text-foreground"
-                          : "text-muted-foreground",
+                        card.className // Use specific color if defined
+                          ? card.className
+                          : card.emphasis
+                            ? "text-foreground"
+                            : "text-muted-foreground",
                       )}
                     >
                       {card.prefix}

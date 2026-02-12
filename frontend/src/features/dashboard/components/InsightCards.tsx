@@ -52,7 +52,7 @@ export function InsightCards({ data }: InsightCardsProps) {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              최고 수익왕
+              최고 수익
             </CardTitle>
             <Trophy className="h-4 w-4 text-blue-600" />
           </CardHeader>
@@ -64,12 +64,15 @@ export function InsightCards({ data }: InsightCardsProps) {
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   순수익{" "}
-                  <span className="font-medium text-foreground">
+                  <span className="font-medium text-blue-600">
                     {topProfit.netProfit.toLocaleString()}원
                   </span>
                 </p>
                 <div className="mt-2 text-xs text-muted-foreground/80">
-                  매출 {topProfit.totalRevenue.toLocaleString()}원
+                  매출{" "}
+                  <span className="text-emerald-600 font-medium">
+                    {topProfit.totalRevenue.toLocaleString()}원
+                  </span>
                 </div>
               </>
             ) : (
@@ -86,7 +89,7 @@ export function InsightCards({ data }: InsightCardsProps) {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              최고 효율왕
+              최고 효율
             </CardTitle>
             <Zap className="h-4 w-4 text-purple-600" />
           </CardHeader>
@@ -98,7 +101,7 @@ export function InsightCards({ data }: InsightCardsProps) {
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
                   시간당{" "}
-                  <span className="font-medium text-foreground">
+                  <span className="font-medium text-purple-600">
                     {topEfficiency.hourlyRate.toLocaleString()}원
                   </span>
                 </p>
@@ -120,7 +123,7 @@ export function InsightCards({ data }: InsightCardsProps) {
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              최고 수익률왕
+              최고 수익률
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-rose-600" />
           </CardHeader>
@@ -131,13 +134,16 @@ export function InsightCards({ data }: InsightCardsProps) {
                   {topRoi.name}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  ROI{" "}
-                  <span className="font-medium text-foreground">
+                  수익률{" "}
+                  <span className="font-medium text-rose-600">
                     {topRoi.roi}%
                   </span>
                 </p>
                 <div className="mt-2 text-xs text-muted-foreground/80">
-                  비용 {topRoi.totalExpense.toLocaleString()}원
+                  비용{" "}
+                  <span className="text-rose-600 font-medium">
+                    {topRoi.totalExpense.toLocaleString()}원
+                  </span>
                 </div>
               </>
             ) : (

@@ -56,15 +56,15 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
   const chartSeries = chartData.map((d) => getSeriesValue(d, activeTab));
   const chartLabels = chartData.map((d) => d.name);
 
-  // 차트용 컬러 팔레트 — 수입원별 구분을 위한 세련된 색상 조합
+  // 차트용 컬러 팔레트 — 수입원별 구분을 위한 세련된 파스텔 톤 색상 조합
   const chartColors = [
-    "#6366f1", // Indigo
-    "#14b8a6", // Teal
-    "#f59e0b", // Amber
-    "#f43f5e", // Rose
-    "#0ea5e9", // Sky
-    "#8b5cf6", // Violet
-    "#10b981", // Emerald
+    "#60a5fa", // Blue 400
+    "#34d399", // Emerald 400
+    "#fb7185", // Rose 400
+    "#a78bfa", // Violet 400
+    "#fbbf24", // Amber 400
+    "#2dd4bf", // Teal 400
+    "#f472b6", // Pink 400
   ];
 
   const chartOptions: ApexOptions = {
