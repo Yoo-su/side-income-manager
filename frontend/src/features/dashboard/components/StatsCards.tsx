@@ -6,6 +6,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
+  Clock,
+  type LucideIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { DashboardSummary } from "../types";
@@ -14,16 +16,39 @@ interface StatsCardsProps {
   summary?: DashboardSummary;
 }
 
+interface LocalMonthlyStat {
+  revenue: number;
+  expense: number;
+  netProfit: number;
+  totalHours: number;
+}
+
 /** 통계 카드 — 전월 대비 증감 표시 및 모노크롬 디자인 */
 export function StatsCards({ summary }: StatsCardsProps) {
-  const current = summary?.currentMonth || {
+  const current = (summary?.currentMonth || {
     revenue: 0,
     expense: 0,
     netProfit: 0,
-  };
-  const diff = summary?.changeRate || { revenue: 0, expense: 0, netProfit: 0 };
+    totalHours: 0,
+  }) as unknown as LocalMonthlyStat;
 
-  const cards = [
+  const diff = (summary?.changeRate || {
+    revenue: 0,
+    expense: 0,
+    netProfit: 0,
+    totalHours: 0,
+  }) as unknown as LocalMonthlyStat;
+
+  interface CardItem {
+    title: string;
+    value: number;
+    diff: number;
+    icon: LucideIcon;
+    prefix: string;
+    suffix?: string;
+  }
+
+  const cards: CardItem[] = [
     {
       title: "이번 달 순수익",
       value: current.netProfit,
@@ -45,10 +70,18 @@ export function StatsCards({ summary }: StatsCardsProps) {
       icon: TrendingDown,
       prefix: "-",
     },
+    {
+      title: "총 투입 시간",
+      value: current.totalHours,
+      diff: diff.totalHours,
+      icon: Clock,
+      prefix: "",
+      suffix: "시간",
+    },
   ];
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {cards.map((card, index) => {
         const diffValue = card.diff ?? 0;
         const isPositive = diffValue > 0;
@@ -76,7 +109,8 @@ export function StatsCards({ summary }: StatsCardsProps) {
               <CardContent>
                 <div className="text-2xl font-bold text-foreground">
                   {card.prefix}
-                  {card.value.toLocaleString()}원
+                  {card.value.toLocaleString()}
+                  {card.suffix ? card.suffix : "원"}
                 </div>
                 <div className="flex items-center mt-1 text-xs">
                   {isPositive && (

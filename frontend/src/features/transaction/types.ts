@@ -10,10 +10,11 @@ export interface Transaction {
   id: string;
   incomeSourceId: string;
   type: TransactionType;
-  amount: number; // string if coming from decimal? Axios converts JSON numbers usually, but large decimals might be strings.
+  amount: number;
   date: string;
   description: string;
   isRecurring: boolean;
+  hours?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -25,12 +26,16 @@ export interface CreateTransactionDto {
   date: string;
   description: string;
   isRecurring?: boolean;
+  hours?: number;
 }
 
-export interface UpdateTransactionDto extends Partial<CreateTransactionDto> {}
+export type UpdateTransactionDto = Partial<CreateTransactionDto>;
 
 export interface TransactionSummary {
   revenue: number;
   expense: number;
   netProfit: number;
+  totalHours: number;
+  hourlyRate: number;
+  roi: number;
 }

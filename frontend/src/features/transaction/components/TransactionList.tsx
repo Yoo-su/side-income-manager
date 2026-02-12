@@ -1,6 +1,6 @@
 import { type Transaction, TransactionType } from "../../transaction/types";
 import { format } from "date-fns";
-import { Trash2, ArrowUp, ArrowDown, Edit2 } from "lucide-react";
+import { Trash2, ArrowUp, ArrowDown, Edit2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
@@ -51,9 +51,17 @@ export function TransactionList({
                 )}
               </div>
               <div className="cursor-pointer" onClick={() => onEdit(tx)}>
-                <p className="text-sm font-medium text-foreground hover:underline">
-                  {tx.description}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-foreground hover:underline">
+                    {tx.description}
+                  </p>
+                  {tx.hours && Number(tx.hours) > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
+                      <Clock size={12} />
+                      {Number(tx.hours)}시간
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-muted-foreground/60">
                   {format(new Date(tx.date), "yyyy-MM-dd")}
                 </p>

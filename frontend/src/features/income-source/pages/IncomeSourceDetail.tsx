@@ -54,6 +54,15 @@ export function IncomeSourceDetail() {
   const updateTransactionFn = useUpdateTransaction();
   const deleteTransactionFn = useDeleteTransaction();
 
+  // 필터 상태
+  const [filter, setFilter] = useState<"ALL" | TransactionType>("ALL");
+
+  // 거래 내역 필터링
+  const filteredTransactions = transactions?.filter((tx) => {
+    if (filter === "ALL") return true;
+    return tx.type === filter;
+  });
+
   if (isSourceLoading || isTxLoading || isSummaryLoading || isStatsLoading) {
     return (
       <div className="flex h-full items-center justify-center py-32">
@@ -136,18 +145,39 @@ export function IncomeSourceDetail() {
       value: Number(summary?.netProfit || 0),
       prefix: (summary?.netProfit || 0) >= 0 ? "+" : "",
       emphasis: true,
+      format: (val: number) => `${val.toLocaleString()}원`,
     },
     {
       title: "총 수익",
       value: Number(summary?.revenue || 0),
       prefix: "+",
       emphasis: false,
+      format: (val: number) => `${val.toLocaleString()}원`,
     },
     {
       title: "총 지출",
       value: Number(summary?.expense || 0),
       prefix: "-",
       emphasis: false,
+      format: (val: number) => `${val.toLocaleString()}원`,
+    },
+    {
+      title: "시간당 수익",
+      value: Number(summary?.hourlyRate || 0),
+      prefix: "",
+      emphasis: false,
+      format: (val: number) =>
+        val > 0 ? `${val.toLocaleString()}원` : "해당 없음",
+      subtext: summary?.totalHours
+        ? `${summary.totalHours}시간 투입`
+        : undefined,
+    },
+    {
+      title: "투자 대비 수익률",
+      value: Number(summary?.roi || 0),
+      prefix: "",
+      emphasis: summary?.roi && summary.roi > 0,
+      format: (val: number) => `${val.toFixed(1)}%`,
     },
   ];
 
@@ -187,9 +217,9 @@ export function IncomeSourceDetail() {
         </div>
 
         {/* 상단: 요약 카드 + 미니 차트 */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-          {/* 요약 카드 (3칸) */}
-          <div className="md:col-span-3 grid grid-cols-3 gap-4 h-full">
+        <div className="grid grid-cols-1 gap-6">
+          {/* 분석 지표 카드 (5칸 그리드) */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {summaryCards.map((card, index) => (
               <motion.div
                 key={card.title}
@@ -211,34 +241,78 @@ export function IncomeSourceDetail() {
                   <CardContent className="text-center pb-4 pt-1">
                     <div
                       className={cn(
-                        "text-xl font-bold tracking-tight whitespace-nowrap",
+                        "text-lg lg:text-xl font-bold tracking-tight whitespace-nowrap",
                         card.emphasis
                           ? "text-foreground"
                           : "text-muted-foreground",
                       )}
                     >
                       {card.prefix}
-                      {card.value.toLocaleString()}
+                      {card.format(card.value)}
                     </div>
+                    {card.subtext && (
+                      <p className="mt-1 text-[10px] text-muted-foreground/60">
+                        {card.subtext}
+                      </p>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>
             ))}
           </div>
 
-          {/* 미니 차트 (2칸) */}
-          <div className="md:col-span-2">
+          {/* 미니 차트 */}
+          <div className="w-full">
             <MonthlyMiniChart data={monthlyStats || []} />
           </div>
         </div>
 
         {/* 거래 내역 */}
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">
-            최근 거래 내역
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold tracking-tight text-foreground">
+              최근 거래 내역
+            </h2>
+            {/* 필터 탭 */}
+            <div className="flex p-1 bg-neutral-100 rounded-lg">
+              <button
+                onClick={() => setFilter("ALL")}
+                className={cn(
+                  "px-3 py-1 text-xs font-medium rounded-md transition-all",
+                  filter === "ALL"
+                    ? "bg-white text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                전체
+              </button>
+              <button
+                onClick={() => setFilter(TransactionType.REVENUE)}
+                className={cn(
+                  "px-3 py-1 text-xs font-medium rounded-md transition-all",
+                  filter === TransactionType.REVENUE
+                    ? "bg-white text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                수익
+              </button>
+              <button
+                onClick={() => setFilter(TransactionType.EXPENSE)}
+                className={cn(
+                  "px-3 py-1 text-xs font-medium rounded-md transition-all",
+                  filter === TransactionType.EXPENSE
+                    ? "bg-white text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                지출
+              </button>
+            </div>
+          </div>
+
           <TransactionList
-            transactions={transactions || []}
+            transactions={filteredTransactions || []}
             onEdit={handleEditClick}
             onDelete={handleDeleteTransaction}
           />
