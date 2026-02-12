@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   BarChart3,
   TrendingUp,
@@ -15,6 +16,7 @@ import type { DashboardSummary } from "../types";
 interface StatsCardsProps {
   summary?: DashboardSummary;
   month?: number;
+  isLoading?: boolean;
 }
 
 interface LocalMonthlyStat {
@@ -25,7 +27,26 @@ interface LocalMonthlyStat {
 }
 
 /** 통계 카드 — 전월 대비 증감 표시 및 모노크롬 디자인 */
-export function StatsCards({ summary, month }: StatsCardsProps) {
+export function StatsCards({ summary, month, isLoading }: StatsCardsProps) {
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card key={i} className="border border-border bg-white shadow-none">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-4 w-[100px]" />
+              <Skeleton className="h-4 w-4 rounded-full" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-[120px] mb-2" />
+              <Skeleton className="h-3 w-[80px]" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   const current = (summary?.currentMonth || {
     revenue: 0,
     expense: 0,
