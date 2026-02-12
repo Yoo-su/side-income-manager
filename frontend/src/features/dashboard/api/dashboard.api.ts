@@ -1,30 +1,35 @@
 import { instance } from "@/shared/lib/axios";
-import type { DashboardSummary, PortfolioItem } from "../types";
-
-export interface MonthlyStat {
-  month: string;
-  revenue: number;
-  expense: number;
-  netProfit: number;
-  year?: number;
-}
-
-export interface SourcePerformance {
-  sourceId: string;
-  name: string;
-  netProfit: number;
-  totalRevenue: number;
-  totalExpense: number;
-}
+import type {
+  DashboardSummary,
+  MonthlyStat,
+  PortfolioItem,
+  SourcePerformance,
+} from "../types";
 
 export const dashboardApi = {
-  getSummary: async (): Promise<DashboardSummary> => {
-    const response = await instance.get("/dashboard/summary");
+  getSummary: async (
+    year?: number,
+    month?: number,
+  ): Promise<DashboardSummary> => {
+    const params = new URLSearchParams();
+    if (year) params.append("year", year.toString());
+    if (month) params.append("month", month.toString());
+    const response = await instance.get(
+      `/dashboard/summary?${params.toString()}`,
+    );
     return response.data;
   },
 
-  getPortfolio: async (): Promise<PortfolioItem[]> => {
-    const response = await instance.get("/dashboard/portfolio");
+  getPortfolio: async (
+    year?: number,
+    month?: number,
+  ): Promise<PortfolioItem[]> => {
+    const params = new URLSearchParams();
+    if (year) params.append("year", year.toString());
+    if (month) params.append("month", month.toString());
+    const response = await instance.get(
+      `/dashboard/portfolio?${params.toString()}`,
+    );
     return response.data;
   },
 
@@ -32,18 +37,22 @@ export const dashboardApi = {
     year?: number,
     limit?: number,
   ): Promise<MonthlyStat[]> => {
-    const params: Record<string, number> = {};
-    if (limit) params.limit = limit;
-    else if (year) params.year = year;
-
     const response = await instance.get("/dashboard/monthly-stats", {
-      params,
+      params: { year, limit },
     });
     return response.data;
   },
 
-  getSourceRanking: async (): Promise<SourcePerformance[]> => {
-    const response = await instance.get("/dashboard/source-ranking");
+  getSourceRanking: async (
+    year?: number,
+    month?: number,
+  ): Promise<SourcePerformance[]> => {
+    const params = new URLSearchParams();
+    if (year) params.append("year", year.toString());
+    if (month) params.append("month", month.toString());
+    const response = await instance.get(
+      `/dashboard/source-ranking?${params.toString()}`,
+    );
     return response.data;
   },
 };
