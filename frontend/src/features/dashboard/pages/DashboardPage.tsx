@@ -13,10 +13,48 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
+import { ChartFilterControl } from "@/features/common/components/ChartFilterControl";
+import type { ChartFilterType } from "@/features/common/components/ChartFilterControl";
+import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
+
 export function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const year = selectedDate.getFullYear();
   const month = selectedDate.getMonth() + 1;
+
+  // 차트 필터 상태
+  const [chartFilterType, setChartFilterType] = useState<ChartFilterType>("6m");
+  const [chartDateRange, setChartDateRange] = useState<DateRange | undefined>();
+
+  // 필터에 따른 API 파라미터 계산
+  const getChartParams = () => {
+    if (
+      chartFilterType === "custom" &&
+      chartDateRange?.from &&
+      chartDateRange?.to
+    ) {
+      return {
+        startDate: format(chartDateRange.from, "yyyy-MM-dd"),
+        endDate: format(chartDateRange.to, "yyyy-MM-dd"),
+        limit: undefined,
+      };
+    }
+
+    // Quick Select presets
+    let limit = 6;
+    if (chartFilterType === "1y") limit = 12;
+    if (chartFilterType === "3y") limit = 36;
+    if (chartFilterType === "3y") limit = 36;
+
+    return { limit, startDate: undefined, endDate: undefined };
+  };
+
+  const {
+    limit: chartLimit,
+    startDate: chartStartDate,
+    endDate: chartEndDate,
+  } = getChartParams();
 
   const { data: summary, isLoading: isSummaryLoading } = useQuery({
     queryKey: ["dashboard", "summary", year, month],
@@ -24,9 +62,20 @@ export function DashboardPage() {
   });
 
   const { data: trendData, isLoading: isTrendLoading } = useQuery({
-    queryKey: ["dashboard", "trend"],
-    // 최근 6개월 데이터 조회
-    queryFn: () => dashboardApi.getMonthlyStats(undefined, 6),
+    queryKey: [
+      "dashboard",
+      "trend",
+      chartFilterType,
+      chartStartDate,
+      chartEndDate,
+    ],
+    queryFn: () =>
+      dashboardApi.getMonthlyStats(
+        undefined,
+        chartLimit,
+        chartStartDate,
+        chartEndDate,
+      ),
   });
 
   const { data: rankingData, isLoading: isRankingLoading } = useQuery({
@@ -35,6 +84,11 @@ export function DashboardPage() {
     queryFn: () => dashboardApi.getSourceRanking(year),
     placeholderData: (previousData) => previousData,
   });
+
+  const handleFilterChange = (type: ChartFilterType, range?: DateRange) => {
+    setChartFilterType(type);
+    if (range) setChartDateRange(range);
+  };
 
   return (
     <PageTransition>
@@ -110,10 +164,13 @@ export function DashboardPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="space-y-1">
-            <h3 className="text-lg font-semibold text-foreground">
-              월별 추이 및 효율 분석
-            </h3>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h3 className="text-lg font-semibold text-foreground">
+                월별 추이 및 효율 분석
+              </h3>
+            </div>
+            <ChartFilterControl onFilterChange={handleFilterChange} />
           </div>
 
           <div className="grid grid-cols-1 gap-6">
@@ -127,6 +184,9 @@ export function DashboardPage() {
                 isTrendLoading={isTrendLoading}
                 rankingData={rankingData}
                 isRankingLoading={isRankingLoading}
+                startDate={chartStartDate}
+                endDate={chartEndDate}
+                limit={chartLimit}
               />
             </motion.div>
           </div>

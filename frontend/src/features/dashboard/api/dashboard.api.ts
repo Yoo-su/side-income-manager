@@ -36,9 +36,11 @@ export const dashboardApi = {
   getMonthlyStats: async (
     year?: number,
     limit?: number,
+    startDate?: string,
+    endDate?: string,
   ): Promise<MonthlyStat[]> => {
     const response = await instance.get("/dashboard/monthly-stats", {
-      params: { year, limit },
+      params: { year, limit, startDate, endDate },
     });
     return response.data;
   },
@@ -57,6 +59,8 @@ export const dashboardApi = {
   },
   getMonthlyRevenueBySource: async (
     limit?: number,
+    startDate?: string,
+    endDate?: string,
   ): Promise<
     {
       month: string;
@@ -68,7 +72,7 @@ export const dashboardApi = {
     const response = await instance.get(
       "/dashboard/monthly-revenue-by-source",
       {
-        params: { limit },
+        params: { limit, startDate, endDate },
       },
     );
     return response.data;

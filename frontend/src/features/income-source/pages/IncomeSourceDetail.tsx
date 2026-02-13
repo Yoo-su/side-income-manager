@@ -23,6 +23,10 @@ import { useState } from "react";
 import { IncomeSourceTypeLabel } from "@/shared/constants/localization";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { motion } from "framer-motion";
+import { ChartFilterControl } from "@/features/common/components/ChartFilterControl";
+import type { ChartFilterType } from "@/features/common/components/ChartFilterControl";
+import { format } from "date-fns";
+import type { DateRange } from "react-day-picker";
 import { cn } from "@/lib/utils";
 
 /** 수입원 상세 페이지 — 요약 + 미니차트 + 거래 관리 */
@@ -39,9 +43,55 @@ export function IncomeSourceDetail() {
     enabled: !!id,
   });
 
+  // 차트 필터 상태
+  const [chartFilterType, setChartFilterType] = useState<ChartFilterType>("6m");
+  const [chartDateRange, setChartDateRange] = useState<DateRange | undefined>();
+
+  // 필터에 따른 API 파라미터 계산
+  const getChartParams = () => {
+    if (
+      chartFilterType === "custom" &&
+      chartDateRange?.from &&
+      chartDateRange?.to
+    ) {
+      return {
+        startDate: format(chartDateRange.from, "yyyy-MM-dd"),
+        endDate: format(chartDateRange.to, "yyyy-MM-dd"),
+        limit: undefined,
+      };
+    }
+
+    // Quick Select presets
+    let limit = 6;
+    if (chartFilterType === "1y") limit = 12;
+    if (chartFilterType === "3y") limit = 36;
+
+    return { limit, startDate: undefined, endDate: undefined };
+  };
+
+  const {
+    limit: chartLimit,
+    startDate: chartStartDate,
+    endDate: chartEndDate,
+  } = getChartParams();
+
   const { data: monthlyStats, isLoading: isStatsLoading } = useQuery({
-    queryKey: ["income-sources", id, "monthly-stats"],
-    queryFn: () => incomeSourceApi.getMonthlyStats(id!),
+    queryKey: [
+      "income-sources",
+      id,
+      "monthly-stats",
+      chartFilterType,
+      chartStartDate,
+      chartEndDate,
+      chartLimit,
+    ],
+    queryFn: () =>
+      incomeSourceApi.getMonthlyStats(
+        id!,
+        chartStartDate,
+        chartEndDate,
+        chartLimit,
+      ),
     enabled: !!id,
   });
 
@@ -54,8 +104,33 @@ export function IncomeSourceDetail() {
   const updateTransactionFn = useUpdateTransaction();
   const deleteTransactionFn = useDeleteTransaction();
 
-  // 필터 상태
+  // 필터 상태 (거래 내역)
   const [filter, setFilter] = useState<"ALL" | TransactionType>("ALL");
+
+  const handleChartFilterChange = (
+    type: ChartFilterType,
+    range?: DateRange,
+  ) => {
+    setChartFilterType(type);
+    if (range) setChartDateRange(range);
+  };
+
+  // ... (rest of the code)
+
+  // In the return JSX, inside "상단: 요약 카드 + 미니 차트" -> "미니 차트" section:
+  /*
+          {/* 미니 차트 * /}
+          <div className="w-full space-y-2">
+            <div className="flex justify-end">
+              <ChartFilterControl
+                onFilterChange={handleChartFilterChange}
+                defaultType="6m"
+                className="scale-90 origin-right" // 공간에 맞게 크기 축소
+              />
+            </div>
+            <MonthlyMiniChart data={monthlyStats || []} />
+          </div>
+  */
 
   // 거래 내역 필터링
   const filteredTransactions = transactions?.filter((tx) => {
@@ -248,7 +323,7 @@ export function IncomeSourceDetail() {
                     <div
                       className={cn(
                         "text-lg lg:text-xl font-bold tracking-tight whitespace-nowrap",
-                        card.className // Use specific color if defined
+                        card.className // 지정된 색상이 있다면 사용
                           ? card.className
                           : card.emphasis
                             ? "text-foreground"
@@ -270,7 +345,17 @@ export function IncomeSourceDetail() {
           </div>
 
           {/* 미니 차트 */}
-          <div className="w-full">
+          <div className="w-full space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-foreground">
+                월별 추이
+              </h3>
+              <ChartFilterControl
+                onFilterChange={handleChartFilterChange}
+                defaultType="6m"
+                className="scale-90 origin-right"
+              />
+            </div>
             <MonthlyMiniChart data={monthlyStats || []} />
           </div>
         </div>

@@ -13,10 +13,13 @@ import type { MonthlyStat, SourcePerformance } from "../types";
 
 interface DashboardChartSectionProps {
   className?: string;
-  trendData?: MonthlyStat[]; // Updated type from any[]
+  trendData?: MonthlyStat[]; // any[] 타입에서 구체적 타입으로 업데이트
   isTrendLoading: boolean;
-  rankingData?: SourcePerformance[]; // Added missing prop definition
-  isRankingLoading?: boolean; // Added missing prop definition
+  rankingData?: SourcePerformance[];
+  isRankingLoading?: boolean;
+  startDate?: string;
+  endDate?: string;
+  limit?: number;
 }
 
 type ViewMode = "total" | "comparison";
@@ -30,13 +33,17 @@ export function DashboardChartSection({
   className,
   trendData,
   isTrendLoading,
+  startDate,
+  endDate,
+  limit,
 }: DashboardChartSectionProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("total");
 
   // 비교 분석 데이터 조회 (비교 탭 활성화 시에만)
   const { data: comparisonData, isLoading: isComparisonLoading } = useQuery({
-    queryKey: ["dashboard", "revenue-by-source", 6],
-    queryFn: () => dashboardApi.getMonthlyRevenueBySource(6),
+    queryKey: ["dashboard", "revenue-by-source", limit, startDate, endDate],
+    queryFn: () =>
+      dashboardApi.getMonthlyRevenueBySource(limit, startDate, endDate),
     enabled: viewMode === "comparison",
     staleTime: 5 * 60 * 1000,
   });

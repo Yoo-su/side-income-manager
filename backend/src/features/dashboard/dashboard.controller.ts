@@ -36,13 +36,15 @@ export class DashboardController {
 
   @Get('monthly-stats')
   @ApiOperation({
-    summary: '월별 통계 조회 (연도별 또는 최근 N개월)',
+    summary: '월별 통계 조회 (연도별, 최근 N개월, 또는 특정 기간)',
+    description:
+      'year, limit, 또는 startDate/endDate를 통해 월별 통계를 조회합니다.',
   })
   @ApiQuery({
     name: 'year',
     required: false,
     type: Number,
-    description: '조회할 연도 (limit이 없을 때 사용)',
+    description: '조회할 연도',
   })
   @ApiQuery({
     name: 'limit',
@@ -50,10 +52,31 @@ export class DashboardController {
     type: Number,
     description: '최근 N개월 조회 (year보다 우선순위 높음)',
   })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: String,
+    description: '시작 날짜 (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: String,
+    description: '종료 날짜 (YYYY-MM-DD)',
+  })
   async getMonthlyStats(
     @Query('year') year?: number,
     @Query('limit') limit?: number,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
+    if (startDate && endDate) {
+      return this.transactionService.getMonthlyStats(
+        undefined,
+        startDate,
+        endDate,
+      );
+    }
     if (limit) {
       return this.transactionService.getRecentMonthlyStats(limit);
     }
@@ -82,7 +105,7 @@ export class DashboardController {
   @ApiOperation({
     summary: '월별 수입원별 매출 추이 조회 (Top 5)',
     description:
-      '최근 N개월간 매출 상위 5개 수입원의 월별 매출 흐름을 조회합니다.',
+      '최근 N개월간 또는 특정 기간 동안 매출 상위 5개 수입원의 월별 매출 흐름을 조회합니다.',
   })
   @ApiQuery({
     name: 'limit',
@@ -90,7 +113,27 @@ export class DashboardController {
     type: Number,
     description: '조회할 개월 수 (기본: 6)',
   })
-  async getMonthlyRevenueBySource(@Query('limit') limit?: number) {
-    return this.transactionService.getMonthlyRevenuePatterns(limit || 6);
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: String,
+    description: '시작 날짜 (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: String,
+    description: '종료 날짜 (YYYY-MM-DD)',
+  })
+  async getMonthlyRevenueBySource(
+    @Query('limit') limit?: number,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.transactionService.getMonthlyRevenuePatterns(
+      limit || 6,
+      startDate,
+      endDate,
+    );
   }
 }

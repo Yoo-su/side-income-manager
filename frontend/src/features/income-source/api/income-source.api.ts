@@ -34,8 +34,15 @@ export const incomeSourceApi = {
     await instance.delete(`/income-sources/${id}`);
   },
 
-  getMonthlyStats: async (id: string): Promise<MonthlyStat[]> => {
-    const response = await instance.get(`/income-sources/${id}/monthly-stats`);
+  getMonthlyStats: async (
+    id: string,
+    startDate?: string,
+    endDate?: string,
+    limit?: number,
+  ): Promise<MonthlyStat[]> => {
+    const response = await instance.get(`/income-sources/${id}/monthly-stats`, {
+      params: { startDate, endDate, limit },
+    });
     return response.data;
   },
 };

@@ -182,21 +182,38 @@ export class TransactionService {
   }
 
   /**
-   * 연도별 월간 통계(수익, 지출, 순수익)를 조회합니다.
-   * @param year 조회할 연도
+   * 특정 기간 동안의 월별 통계(수익, 지출, 순수익)를 조회합니다.
+   * 시작일과 종료일을 기준으로 하며, 해당 기간 내의 모든 월을 포함하도록 Zero-Filling 합니다.
+   * @param year 조회할 연도 (startDate/endDate가 없을 경우 사용)
+   * @param startDate 시작 날짜 (YYYY-MM-DD)
+   * @param endDate 종료 날짜 (YYYY-MM-DD)
    * @returns 월별 통계 리스트
    */
   async getMonthlyStats(
-    year: number,
+    year?: number,
+    startDate?: string,
+    endDate?: string,
   ): Promise<
     { month: string; revenue: number; expense: number; netProfit: number }[]
   > {
-    const startDate = new Date(`${year}-01-01`);
-    const endDate = new Date(`${year + 1}-01-01`);
+    let start: Date;
+    let end: Date;
+
+    if (startDate && endDate) {
+      start = new Date(startDate);
+      end = new Date(endDate);
+    } else {
+      const targetYear = year || new Date().getFullYear();
+      start = new Date(`${targetYear}-01-01`);
+      end = new Date(`${targetYear}-12-31`);
+    }
+
+    // 종료일의 시간을 23:59:59로 설정하여 해당 날짜의 데이터를 포함
+    end.setHours(23, 59, 59, 999);
 
     const result = await this.transactionRepository
       .createQueryBuilder('transaction')
-      .leftJoin('transaction.incomeSource', 'source') // Join
+      .leftJoin('transaction.incomeSource', 'source')
       .select("TO_CHAR(transaction.date, 'YYYY-MM')", 'month')
       .addSelect(
         'SUM(CASE WHEN transaction.type = :revenue THEN transaction.amount ELSE 0 END)',
@@ -206,9 +223,9 @@ export class TransactionService {
         'SUM(CASE WHEN transaction.type = :expense THEN transaction.amount ELSE 0 END)',
         'expense',
       )
-      .where('transaction.date >= :startDate', { startDate })
-      .andWhere('transaction.date < :endDate', { endDate })
-      .andWhere('source.isActive = true') // Filter active
+      .where('transaction.date >= :start', { start })
+      .andWhere('transaction.date <= :end', { end })
+      .andWhere('source.isActive = true')
       .groupBy("TO_CHAR(transaction.date, 'YYYY-MM')")
       .orderBy('month', 'ASC')
       .setParameters({
@@ -217,19 +234,51 @@ export class TransactionService {
       })
       .getRawMany<MonthlyStatRaw>();
 
-    return result.map((item) => ({
-      month: item.month,
-      revenue: Number(item.revenue),
-      expense: Number(item.expense),
-      netProfit: new Decimal(item.revenue)
-        .minus(new Decimal(item.expense))
-        .toNumber(),
-    }));
+    // Zero-Filling Logic
+    const filledStats: {
+      month: string;
+      revenue: number;
+      expense: number;
+      netProfit: number;
+    }[] = [];
+    const current = new Date(start);
+    // current를 월의 1일로 설정하여 정확한 월 반복 보장
+    current.setDate(1);
+
+    while (current <= end) {
+      const yearStr = current.getFullYear();
+      const monthStr = String(current.getMonth() + 1).padStart(2, '0');
+      const monthKey = `${yearStr}-${monthStr}`;
+
+      const found = result.find((r) => r.month === monthKey);
+
+      if (found) {
+        filledStats.push({
+          month: monthKey,
+          revenue: Number(found.revenue),
+          expense: Number(found.expense),
+          netProfit: new Decimal(found.revenue)
+            .minus(new Decimal(found.expense))
+            .toNumber(),
+        });
+      } else {
+        filledStats.push({
+          month: monthKey,
+          revenue: 0,
+          expense: 0,
+          netProfit: 0,
+        });
+      }
+
+      current.setMonth(current.getMonth() + 1);
+    }
+
+    return filledStats;
   }
 
   /**
    * 최근 N개월간의 월별 통계를 조회합니다.
-   * @param limit 조회할 개월 수
+   * @param limit 조회할 개월 수 (기본: 6)
    * @returns 월별 통계 리스트
    */
   async getRecentMonthlyStats(
@@ -237,43 +286,17 @@ export class TransactionService {
   ): Promise<
     { month: string; revenue: number; expense: number; netProfit: number }[]
   > {
-    const endDate = new Date();
-    // 현재 달 포함하여 limit개월 전 1일
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - limit + 1);
-    startDate.setDate(1);
+    const end = new Date();
+    const start = new Date();
+    start.setMonth(start.getMonth() - limit + 1);
+    start.setDate(1);
 
-    const result = await this.transactionRepository
-      .createQueryBuilder('transaction')
-      .leftJoin('transaction.incomeSource', 'source') // Join
-      .select("TO_CHAR(transaction.date, 'YYYY-MM')", 'month')
-      .addSelect(
-        'SUM(CASE WHEN transaction.type = :revenue THEN transaction.amount ELSE 0 END)',
-        'revenue',
-      )
-      .addSelect(
-        'SUM(CASE WHEN transaction.type = :expense THEN transaction.amount ELSE 0 END)',
-        'expense',
-      )
-      .where('transaction.date >= :startDate', { startDate })
-      .andWhere('transaction.date <= :endDate', { endDate })
-      .andWhere('source.isActive = true') // Filter active
-      .groupBy("TO_CHAR(transaction.date, 'YYYY-MM')")
-      .orderBy('month', 'ASC')
-      .setParameters({
-        revenue: TransactionType.REVENUE,
-        expense: TransactionType.EXPENSE,
-      })
-      .getRawMany<MonthlyStatRaw>();
-
-    return result.map((item) => ({
-      month: item.month,
-      revenue: Number(item.revenue),
-      expense: Number(item.expense),
-      netProfit: new Decimal(item.revenue)
-        .minus(new Decimal(item.expense))
-        .toNumber(),
-    }));
+    // 날짜 문자열로 변환하여 getMonthlyStats 재사용
+    return this.getMonthlyStats(
+      undefined,
+      start.toISOString().split('T')[0],
+      end.toISOString().split('T')[0],
+    );
   }
 
   /**
@@ -552,19 +575,36 @@ export class TransactionService {
 
   /**
    * 특정 수입원의 월별 통계(수익, 지출, 순수익)를 조회합니다.
+   * 시작일과 종료일을 기준으로 하며, 해당 기간 내의 모든 월을 포함하도록 Zero-Filling 합니다.
    * @param sourceId 수입원 ID
-   * @param limit 조회할 개월 수 (기본값: 6)
+   * @param limit 조회할 개월 수 (기본값: 6, startDate/endDate가 없을 때만 사용)
+   * @param startDate 시작 날짜 (YYYY-MM-DD)
+   * @param endDate 종료 날짜 (YYYY-MM-DD)
    * @returns 월별 통계 리스트
    */
   async getMonthlyStatsBySourceId(
     sourceId: string,
     limit: number = 6,
+    startDate?: string,
+    endDate?: string,
   ): Promise<
     { month: string; revenue: number; expense: number; netProfit: number }[]
   > {
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - limit + 1);
-    startDate.setDate(1);
+    let start: Date;
+    let end: Date;
+
+    if (startDate && endDate) {
+      start = new Date(startDate);
+      end = new Date(endDate);
+    } else {
+      end = new Date();
+      start = new Date();
+      start.setMonth(start.getMonth() - limit + 1);
+      start.setDate(1);
+    }
+
+    // 종료일의 시간을 23:59:59로 설정
+    end.setHours(23, 59, 59, 999);
 
     const result = await this.transactionRepository
       .createQueryBuilder('tx')
@@ -578,7 +618,8 @@ export class TransactionService {
         'expense',
       )
       .where('tx.incomeSourceId = :sourceId', { sourceId })
-      .andWhere('tx.date >= :startDate', { startDate })
+      .andWhere('tx.date >= :start', { start })
+      .andWhere('tx.date <= :end', { end })
       .groupBy("TO_CHAR(tx.date, 'YYYY-MM')")
       .orderBy('month', 'ASC')
       .setParameters({
@@ -587,20 +628,57 @@ export class TransactionService {
       })
       .getRawMany<MonthlyStatRaw>();
 
-    return result.map((item) => ({
-      month: item.month,
-      revenue: Number(item.revenue),
-      expense: Number(item.expense),
-      netProfit: Number(item.revenue) - Number(item.expense),
-    }));
+    // Zero-Filling
+    const filledStats: {
+      month: string;
+      revenue: number;
+      expense: number;
+      netProfit: number;
+    }[] = [];
+    const current = new Date(start);
+    current.setDate(1);
+
+    while (current <= end) {
+      const yearStr = current.getFullYear();
+      const monthStr = String(current.getMonth() + 1).padStart(2, '0');
+      const monthKey = `${yearStr}-${monthStr}`;
+
+      const found = result.find((r) => r.month === monthKey);
+
+      if (found) {
+        filledStats.push({
+          month: monthKey,
+          revenue: Number(found.revenue),
+          expense: Number(found.expense),
+          netProfit: Number(found.revenue) - Number(found.expense),
+        });
+      } else {
+        filledStats.push({
+          month: monthKey,
+          revenue: 0,
+          expense: 0,
+          netProfit: 0,
+        });
+      }
+
+      current.setMonth(current.getMonth() + 1);
+    }
+
+    return filledStats;
   }
 
   /**
-   * 최근 N개월간 상위 5개 수입원의 월별 매출 추이를 조회합니다.
-   * @param limit 조회할 개월 수
+   * 특정 기간(또는 최근 N개월) 동안 상위 5개 수입원의 월별 매출 추이를 조회합니다.
+   * @param limit 조회할 개월 수 (startDate/endDate가 없을 때만 사용)
+   * @param startDate 시작 날짜
+   * @param endDate 종료 날짜
    * @returns 월별/수입원별 매출 데이터
    */
-  async getMonthlyRevenuePatterns(limit: number): Promise<
+  async getMonthlyRevenuePatterns(
+    limit: number,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<
     {
       month: string;
       sourceId: string;
@@ -608,21 +686,30 @@ export class TransactionService {
       revenue: number;
     }[]
   > {
-    // 1. 기간 설정 (Upper Bound 추가)
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - limit + 1);
-    startDate.setDate(1);
+    // 1. 기간 설정
+    let start: Date;
+    let end: Date;
+
+    if (startDate && endDate) {
+      start = new Date(startDate);
+      end = new Date(endDate);
+    } else {
+      end = new Date();
+      start = new Date();
+      start.setMonth(start.getMonth() - limit + 1);
+      start.setDate(1);
+    }
+    end.setHours(23, 59, 59, 999);
 
     // 2. 기간 내 매출 합계 기준 Top 5 수입원 선정 (활성 상태인 것만)
     const topSources = await this.transactionRepository
       .createQueryBuilder('tx')
       .leftJoin('tx.incomeSource', 'source')
       .select('source.id', 'id')
-      .addSelect('source.name', 'name') // name도 같이 가져오기
+      .addSelect('source.name', 'name')
       .addSelect('SUM(tx.amount)', 'total')
-      .where('tx.date >= :startDate', { startDate })
-      .andWhere('tx.date <= :endDate', { endDate }) // 미래 데이터 방지
+      .where('tx.date >= :start', { start })
+      .andWhere('tx.date <= :end', { end })
       .andWhere('tx.type = :type', { type: TransactionType.REVENUE })
       .andWhere('source.isActive = true')
       .groupBy('source.id')
@@ -645,8 +732,8 @@ export class TransactionService {
       .select("TO_CHAR(tx.date, 'YYYY-MM')", 'month')
       .addSelect('source.id', 'sourceId')
       .addSelect('SUM(tx.amount)', 'revenue')
-      .where('tx.date >= :startDate', { startDate })
-      .andWhere('tx.date <= :endDate', { endDate })
+      .where('tx.date >= :start', { start })
+      .andWhere('tx.date <= :end', { end })
       .andWhere('tx.type = :type', { type: TransactionType.REVENUE })
       .andWhere('source.id IN (:...sourceIds)', { sourceIds })
       .groupBy("TO_CHAR(tx.date, 'YYYY-MM')")
@@ -656,17 +743,20 @@ export class TransactionService {
         month: string;
         sourceId: string;
         revenue: string;
+        to_char?: string; // Optional property for some drivers
       }>();
 
     // 4. Zero-Filling 및 데이터 포맷팅
     // 4-1. 모든 월 리스트 생성 (YYYY-MM)
     const allMonths: string[] = [];
-    for (let i = 0; i < limit; i++) {
-      const d = new Date(startDate);
-      d.setMonth(d.getMonth() + i);
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      allMonths.push(`${y}-${m}`);
+    const current = new Date(start);
+    current.setDate(1);
+
+    while (current <= end) {
+      const yearStr = current.getFullYear();
+      const monthStr = String(current.getMonth() + 1).padStart(2, '0');
+      allMonths.push(`${yearStr}-${monthStr}`);
+      current.setMonth(current.getMonth() + 1);
     }
 
     // 4-2. 결과 매핑 (소스별 x 월별 => 없으면 0)
@@ -684,8 +774,7 @@ export class TransactionService {
       allMonths.forEach((m) => {
         // 해당 소스 + 해당 월의 데이터 찾기
         const found = rawResult.find(
-          (r) =>
-            r.sourceId === sId && (r.month === m || (r as any).to_char === m),
+          (r) => r.sourceId === sId && (r.month === m || r.to_char === m),
         );
 
         finalResult.push({

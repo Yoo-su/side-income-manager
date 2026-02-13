@@ -7,8 +7,9 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { IncomeSourceService } from './income-source.service';
 import {
   CreateIncomeSourceDto,
@@ -103,8 +104,36 @@ export class IncomeSourceController {
     status: 200,
     description: '해당 수입원의 월별 수익/지출 통계를 반환합니다. (기본 6개월)',
   })
-  getMonthlyStats(@Param('id', ParseUUIDPipe) id: string) {
-    return this.transactionService.getMonthlyStatsBySourceId(id, 6);
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: '최근 N개월 조회 (기본: 6)',
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    type: String,
+    description: '시작 날짜 (YYYY-MM-DD)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    type: String,
+    description: '종료 날짜 (YYYY-MM-DD)',
+  })
+  getMonthlyStats(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('limit') limit?: number,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.transactionService.getMonthlyStatsBySourceId(
+      id,
+      limit || 6,
+      startDate,
+      endDate,
+    );
   }
 
   @Delete(':id')
