@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Plus, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   type CreateTransactionDto,
   type Transaction,
@@ -63,6 +64,7 @@ export function IncomeSourceDetail() {
 
     // Quick Select presets
     let limit = 6;
+    if (chartFilterType === "3m") limit = 3;
     if (chartFilterType === "1y") limit = 12;
     if (chartFilterType === "3y") limit = 36;
 
@@ -138,7 +140,7 @@ export function IncomeSourceDetail() {
     return tx.type === filter;
   });
 
-  if (isSourceLoading || isTxLoading || isSummaryLoading || isStatsLoading) {
+  if (isSourceLoading || isTxLoading || isSummaryLoading) {
     return (
       <div className="flex h-full items-center justify-center py-32">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -351,12 +353,17 @@ export function IncomeSourceDetail() {
                 월별 추이
               </h3>
               <ChartFilterControl
+                selectedType={chartFilterType}
+                dateRange={chartDateRange}
                 onFilterChange={handleChartFilterChange}
-                defaultType="1y"
                 className="scale-90 origin-right"
               />
             </div>
-            <MonthlyMiniChart data={monthlyStats || []} />
+            {isStatsLoading ? (
+              <Skeleton className="h-[300px] w-full rounded-xl" />
+            ) : (
+              <MonthlyMiniChart data={monthlyStats || []} />
+            )}
           </div>
         </div>
 

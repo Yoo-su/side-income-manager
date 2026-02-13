@@ -1,38 +1,31 @@
 import { Button } from "@/components/ui/button";
 import { DateRangePicker } from "./DateRangePicker";
 import type { DateRange } from "react-day-picker";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-export type ChartFilterType = "3m" | "6m" | "1y" | "3y" | "all" | "custom";
+export type ChartFilterType = "3m" | "6m" | "1y" | "3y" | "custom";
 
 interface ChartFilterControlProps {
+  selectedType: ChartFilterType;
+  dateRange?: DateRange;
   onFilterChange: (type: ChartFilterType, range?: DateRange) => void;
   className?: string;
-  defaultType?: ChartFilterType;
 }
 
 export function ChartFilterControl({
+  selectedType,
+  dateRange,
   onFilterChange,
   className,
-  defaultType = "6m",
 }: ChartFilterControlProps) {
-  const [selectedType, setSelectedType] =
-    useState<ChartFilterType>(defaultType);
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-
   const handleTypeChange = (type: ChartFilterType) => {
-    setSelectedType(type);
     if (type !== "custom") {
-      setDateRange(undefined); // 빠른 선택 사용 시 사용자 지정 범위 초기화
       onFilterChange(type);
     }
   };
 
   const handleRangeChange = (range: DateRange | undefined) => {
-    setDateRange(range);
     if (range?.from) {
-      setSelectedType("custom");
       onFilterChange("custom", range);
     }
   };
@@ -40,7 +33,7 @@ export function ChartFilterControl({
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       <div className="flex items-center space-x-1 rounded-md border bg-white p-1">
-        {(["3m", "6m", "1y", "3y", "all"] as ChartFilterType[]).map((type) => (
+        {(["3m", "6m", "1y", "3y"] as ChartFilterType[]).map((type) => (
           <Button
             key={type}
             variant={selectedType === type ? "secondary" : "ghost"}
@@ -55,7 +48,6 @@ export function ChartFilterControl({
             {type === "6m" && "6개월"}
             {type === "1y" && "1년"}
             {type === "3y" && "3년"}
-            {type === "all" && "전체"}
           </Button>
         ))}
       </div>

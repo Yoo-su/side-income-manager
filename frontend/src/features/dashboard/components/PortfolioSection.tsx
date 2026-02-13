@@ -16,8 +16,9 @@ import type { DateRange } from "react-day-picker";
 interface PortfolioSectionProps {
   data: SourcePerformance[];
   className?: string;
-  onFilterChange?: (type: ChartFilterType, range?: DateRange) => void;
-  defaultType?: ChartFilterType;
+  selectedType: ChartFilterType;
+  dateRange?: DateRange;
+  onFilterChange: (type: ChartFilterType, range?: DateRange) => void;
 }
 
 type TabType = "revenue" | "netProfit" | "expense";
@@ -26,8 +27,9 @@ type TabType = "revenue" | "netProfit" | "expense";
 export function PortfolioSection({
   data,
   className,
+  selectedType,
+  dateRange,
   onFilterChange,
-  defaultType,
 }: PortfolioSectionProps) {
   const [activeTab, setActiveTab] = useState<TabType>("revenue");
 
@@ -162,13 +164,12 @@ export function PortfolioSection({
         </Tabs>
       </CardHeader>
       <div className="px-6 pb-2 flex justify-end">
-        {onFilterChange && (
-          <ChartFilterControl
-            onFilterChange={onFilterChange}
-            defaultType={defaultType || "1y"}
-            className="scale-90 origin-right"
-          />
-        )}
+        <ChartFilterControl
+          selectedType={selectedType}
+          dateRange={dateRange}
+          onFilterChange={onFilterChange}
+          className="scale-90 origin-right"
+        />
       </div>
       <CardContent>
         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">

@@ -45,7 +45,6 @@ export function DashboardPage() {
     if (chartFilterType === "3m") limit = 3;
     if (chartFilterType === "1y") limit = 12;
     if (chartFilterType === "3y") limit = 36;
-    if (chartFilterType === "all") limit = 999; // 대시보드 차트는 limit 방식이라 충분히 큰 수로 설정
 
     return { limit, startDate: undefined, endDate: undefined };
   };
@@ -79,9 +78,6 @@ export function DashboardPage() {
     if (portfolioFilterType === "3m") limit = 3;
     if (portfolioFilterType === "1y") limit = 12;
     if (portfolioFilterType === "3y") limit = 36;
-    if (portfolioFilterType === "all") {
-      return { startDate: undefined, endDate: undefined };
-    }
 
     // TODO: 백엔드가 limit 대신 startDate/endDate만 받으므로 변환 필요
     // 현재 날짜 기준 limit 개월 전 1일 ~ 현재
@@ -233,8 +229,9 @@ export function DashboardPage() {
               </h3>
             </div>
             <ChartFilterControl
+              selectedType={chartFilterType}
+              dateRange={chartDateRange}
               onFilterChange={handleFilterChange}
-              defaultType="1y"
             />
           </div>
 
@@ -268,8 +265,9 @@ export function DashboardPage() {
           ) : (
             <PortfolioSection
               data={rankingData || []}
+              selectedType={portfolioFilterType}
+              dateRange={portfolioDateRange}
               onFilterChange={handlePortfolioFilterChange}
-              defaultType="1y"
             />
           )}
         </motion.div>
