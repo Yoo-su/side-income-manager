@@ -7,10 +7,14 @@ import { cn } from "@/lib/utils";
 interface TrendChartProps {
   data: MonthlyStat[];
   className?: string;
-  minimal?: boolean; // New prop
+  minimal?: boolean;
 }
 
-/** 월별 수익/지출 추이 + 순수익 라인 — ApexCharts Mixed Chart */
+/**
+ * 월별 수익/지출 추이 차트 (Mixed Chart)
+ * - 막대: 수익, 지출
+ * - 라인: 순수익
+ */
 export function TrendChart({
   data,
   className,

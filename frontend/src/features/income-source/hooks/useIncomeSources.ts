@@ -27,24 +27,23 @@ export function useCreateIncomeSource() {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useUpdateIncomeSource() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateIncomeSourceDto }) =>
       incomeSourceApi.update(id, data),
-    // Optimistic Update
+    // 낙관적 업데이트 (Optimistic Update)
     onMutate: async ({ id, data }) => {
-      // 1. Cancel outgoing refetches
+      // 1. 진행 중인 요청 취소
       await queryClient.cancelQueries({ queryKey: INCOME_SOURCE_KEYS.all });
 
-      // 2. Snapshot previous data
+      // 2. 이전 데이터 스냅샷 저장
       const previousIncomeSources = queryClient.getQueryData(
         INCOME_SOURCE_KEYS.all,
       );
 
-      // 3. Optimistically update
+      // 3. 캐시 데이터 즉시 업데이트
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       queryClient.setQueryData(INCOME_SOURCE_KEYS.all, (old: any[]) => {
         if (!old) return [];
@@ -57,7 +56,7 @@ export function useUpdateIncomeSource() {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (_err, _newTodo, context: any) => {
-      // 4. Rollback on error
+      // 4. 에러 발생 시 롤백
       if (context?.previousIncomeSources) {
         queryClient.setQueryData(
           INCOME_SOURCE_KEYS.all,
@@ -66,9 +65,8 @@ export function useUpdateIncomeSource() {
       }
     },
     onSettled: () => {
-      // 5. Invalidate relevant queries
+      // 5. 관련 쿼리 무효화 (최신 데이터 동기화)
       queryClient.invalidateQueries({ queryKey: INCOME_SOURCE_KEYS.all });
-      // Invalidate dashboard queries as inactive status affects them
       queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
       queryClient.invalidateQueries({
         queryKey: ["income-source-performance"],

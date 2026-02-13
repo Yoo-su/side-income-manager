@@ -21,6 +21,11 @@ interface DashboardChartSectionProps {
 
 type ViewMode = "total" | "comparison";
 
+/**
+ * 월별 추이 분석 및 수입원별 매출 비교 차트 섹션
+ * - 전체 흐름: 월별 수익/지출 추이 (TrendChart)
+ * - 비교 분석: 상위 수입원간 매출 변화 비교 (LineChart)
+ */
 export function DashboardChartSection({
   className,
   trendData,
@@ -28,7 +33,7 @@ export function DashboardChartSection({
 }: DashboardChartSectionProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("total");
 
-  // Fetch comparison data only when needed (or prefetch)
+  // 비교 분석 데이터 조회 (비교 탭 활성화 시에만)
   const { data: comparisonData, isLoading: isComparisonLoading } = useQuery({
     queryKey: ["dashboard", "revenue-by-source", 6],
     queryFn: () => dashboardApi.getMonthlyRevenueBySource(6),
@@ -36,11 +41,11 @@ export function DashboardChartSection({
     staleTime: 5 * 60 * 1000,
   });
 
-  // Prepare Series for Comparison Chart
+  // 비교 차트용 Series 데이터 변환
   const getComparisonSeries = () => {
     if (!comparisonData) return [];
 
-    // Group by source
+    // 수입원별 그룹화
     const grouped = comparisonData.reduce(
       (acc, curr) => {
         if (!acc[curr.sourceName]) {
@@ -54,15 +59,11 @@ export function DashboardChartSection({
 
     return Object.entries(grouped).map(([name, data]) => ({
       name,
-      data: data.sort((a, b) => a.x.localeCompare(b.x)), // Ensure chronological order
+      data: data.sort((a, b) => a.x.localeCompare(b.x)), // 날짜순 정렬
     }));
   };
 
   const comparisonSeries = getComparisonSeries();
-
-  // Extract all unique months for x-axis categories if needed,
-  // but ApexCharts with datetime/category needs consistent x-axis.
-  // Assuming API returns data for all months for simplicity, or we let ApexCharts handle missing points.
 
   const comparisonOptions: ApexOptions = {
     chart: {
@@ -71,7 +72,7 @@ export function DashboardChartSection({
       fontFamily: "Pretendard Variable, sans-serif",
       background: "transparent",
       animations: { enabled: true },
-      zoom: { enabled: false }, // 마우스 스크롤 줌 비활성화
+      zoom: { enabled: false },
     },
     colors: [
       "#60a5fa", // Blue
@@ -85,7 +86,7 @@ export function DashboardChartSection({
       curve: "smooth",
     },
     xaxis: {
-      type: "category", // Using month strings
+      type: "category",
       labels: {
         style: { colors: "#a3a3a3", fontSize: "12px" },
       },
@@ -144,27 +145,15 @@ export function DashboardChartSection({
       </CardHeader>
       <CardContent>
         {viewMode === "total" ? (
-          // Total View
+          // 전체 흐름 (TrendChart)
           isTrendLoading ? (
             <Skeleton className="h-[350px] w-full" />
           ) : (
-            // Re-use TrendChart logic but render directly or wrap
             <div className="-mt-4">
-              {/* TrendChart has its own Card wraper, we might want to extract just the chart or render it here.
-                   However, existing TrendChart component renders a Card. 
-                   Ideally, we should refactor TrendChart to export just the Chart, 
-                   OR, we simply render the inner part here.
-                   
-                   For now, let's render the inner chart logic if we want to remove the nested Card border,
-                   OR we can just render existing TrendChart and accept double card or refactor.
-                   
-                   Let's Refactor TrendChart lightly to accept 'minimal' prop? 
-                   Or just copy the chart options here for simplicity since we want full width.
-               */}
               <TrendChart data={trendData || []} minimal />
             </div>
           )
-        ) : // Comparison View
+        ) : // 수입원별 비교 (Comparison)
         isComparisonLoading ? (
           <Skeleton className="h-[350px] w-full" />
         ) : (

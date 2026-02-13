@@ -24,13 +24,14 @@ export function DashboardPage() {
   });
 
   const { data: trendData, isLoading: isTrendLoading } = useQuery({
-    queryKey: ["dashboard", "trend"], // 월별 추이는 연간 데이터이므로 필터링 제외 (혹은 year만 전달?)
+    queryKey: ["dashboard", "trend"],
     // 최근 6개월 데이터 조회
-    queryFn: () => dashboardApi.getMonthlyStats(undefined, 6), // 최근 6개월 데이터 조회
+    queryFn: () => dashboardApi.getMonthlyStats(undefined, 6),
   });
 
   const { data: rankingData, isLoading: isRankingLoading } = useQuery({
-    queryKey: ["dashboard", "ranking", year], // 랭킹/포트폴리오는 '연간' 기준으로 변경 (user request: filtering limited to cards)
+    // 랭킹/포트폴리오는 연간 기준
+    queryKey: ["dashboard", "ranking", year],
     queryFn: () => dashboardApi.getSourceRanking(year),
     placeholderData: (previousData) => previousData,
   });
@@ -47,7 +48,7 @@ export function DashboardPage() {
             수입과 지출 흐름을 한눈에 파악하고 인사이트를 얻으세요.
           </p>
         </div>
-        {/* 1. 핵심 지표 카드 (Monthly Summary - Filter Affected) */}
+        {/* 1. 핵심 지표 카드 */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -79,7 +80,7 @@ export function DashboardPage() {
 
         <Separator className="my-2" />
 
-        {/* 2. 인사이트 카드 (Yearly Highlights) */}
+        {/* 2. 인사이트 카드 */}
         <div className="space-y-4">
           <div className="space-y-1">
             <h3 className="text-lg font-semibold text-foreground">
@@ -131,7 +132,7 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* 5. 수익 포트폴리오 (Yearly Portfolio) */}
+        {/* 5. 수익 포트폴리오 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

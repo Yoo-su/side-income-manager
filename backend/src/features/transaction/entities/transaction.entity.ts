@@ -28,23 +28,29 @@ export class Transaction {
   @JoinColumn({ name: 'incomeSourceId' })
   incomeSource: IncomeSource;
 
+  /** 거래 유형 (수익/지출) */
   @Column({ type: 'enum', enum: TransactionType })
   type: TransactionType;
 
-  @Column({ type: 'decimal', precision: 12, scale: 2 }) // 최대 999,999,999.99
+  /** 거래 금액 (최대 99,999,999,999.99) - precision 12, scale 2 */
+  @Column({ type: 'decimal', precision: 12, scale: 2 })
   amount: number;
 
+  /** 거래 일자 */
   @Column({ type: 'date' })
   date: Date;
 
+  /** 거래 설명 */
   @Column({ type: 'text' })
   description: string;
 
+  /** 정기 결제 여부 (구독료, 월급 등) */
   @Column({ type: 'boolean', default: false })
-  isRecurring: boolean; // 정기 결제 여부 (구독료 등)
+  isRecurring: boolean;
 
+  /** 투입 시간 (시간 단위, 소수점 허용) - 수익 창출에 걸린 시간 */
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  hours: number | null; // 투입 시간 (시간 단위, 소수점 허용)
+  hours: number | null;
 
   @CreateDateColumn()
   createdAt: Date;

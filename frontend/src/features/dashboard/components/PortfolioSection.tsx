@@ -18,18 +18,14 @@ type TabType = "revenue" | "netProfit" | "expense";
 export function PortfolioSection({ data, className }: PortfolioSectionProps) {
   const [activeTab, setActiveTab] = useState<TabType>("revenue");
 
-  // 데이터 정렬 및 가공
+  // 데이터 정렬 및 필터링
   const getSortedData = (type: TabType) => {
-    // 0보다 큰 데이터만 필터링 (지출은 양수로 취급하여 비교)
     const filtered = data.filter((d) => {
       if (type === "revenue") return d.totalRevenue > 0;
       if (type === "expense") return d.totalExpense > 0;
-      if (type === "netProfit") return d.netProfit !== 0; // 순수익은 음수도 가능하지만 포트폴리오에선 어떻게?
+      if (type === "netProfit") return d.netProfit !== 0;
       return true;
     });
-
-    // 순수익 포트폴리오의 경우, 음수인 항목은 도넛 차트에서 제외하거나 별도 처리 필요.
-    // 여기서는 0보다 큰 값만 차트에 표시하고, 리스트에는 모두 표시.
 
     return filtered.sort((a, b) => {
       if (type === "revenue") return b.totalRevenue - a.totalRevenue;
@@ -40,8 +36,7 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
 
   const sortedData = getSortedData(activeTab);
 
-  // 차트용 데이터 (Top 5 + 기타?) or just Top items.
-  // 도넛 차트는 양수만 표현 가능.
+  // 차트 데이터 필터링 (도넛 차트는 양수만 표현 가능)
   const chartData = sortedData.filter((d) => {
     if (activeTab === "netProfit") return d.netProfit > 0;
     return true;
@@ -56,15 +51,15 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
   const chartSeries = chartData.map((d) => getSeriesValue(d, activeTab));
   const chartLabels = chartData.map((d) => d.name);
 
-  // 차트용 컬러 팔레트 — 수입원별 구분을 위한 세련된 파스텔 톤 색상 조합
+  // 차트 컬러 팔레트 (파스텔 톤)
   const chartColors = [
-    "#60a5fa", // Blue 400
-    "#34d399", // Emerald 400
-    "#fb7185", // Rose 400
-    "#a78bfa", // Violet 400
-    "#fbbf24", // Amber 400
-    "#2dd4bf", // Teal 400
-    "#f472b6", // Pink 400
+    "#60a5fa", // Blue
+    "#34d399", // Emerald
+    "#fb7185", // Rose
+    "#a78bfa", // Violet
+    "#fbbf24", // Amber
+    "#2dd4bf", // Teal
+    "#f472b6", // Pink
   ];
 
   const chartOptions: ApexOptions = {
@@ -155,7 +150,6 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
       </CardHeader>
       <CardContent>
         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-          {/* Left: Donut Chart */}
           <div className="shrink-0 relative w-[240px] h-[240px]">
             {chartData.length > 0 ? (
               <ReactApexChart
@@ -172,7 +166,6 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
             )}
           </div>
 
-          {/* Right: Ranking List */}
           <div className="flex-1 w-full space-y-3 min-w-0">
             {sortedData.length === 0 && (
               <p className="text-sm text-muted-foreground">
@@ -182,7 +175,6 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
             {sortedData.map((item, index) => {
               const val = getValue(item);
               const percent = totalValue > 0 ? (val / totalValue) * 100 : 0;
-              // 순수익 탭에서 음수일 경우 progress bar 처리는? 0으로 처리.
               const barWidth = Math.max(0, Math.min(100, percent));
 
               return (
@@ -215,7 +207,6 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
                       </span>
                     </div>
                   </div>
-                  {/* Progress Bar */}
                   <div className="h-1.5 w-full bg-neutral-100 rounded-full overflow-hidden">
                     <motion.div
                       className="h-full rounded-full"
