@@ -84,6 +84,7 @@ export function IncomeSourceDetail() {
     amount: number;
     date: string;
     description: string;
+    hours?: number;
   }) => {
     if (!id) return;
 
@@ -96,6 +97,7 @@ export function IncomeSourceDetail() {
             amount: Number(data.amount),
             date: data.date,
             description: data.description,
+            hours: data.hours,
           },
         },
         {
@@ -112,6 +114,7 @@ export function IncomeSourceDetail() {
         amount: Number(data.amount),
         date: data.date,
         description: data.description,
+        hours: data.hours,
       };
 
       createTransactionFn.mutate(dto, {
