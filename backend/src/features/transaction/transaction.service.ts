@@ -128,7 +128,7 @@ export class TransactionService {
   }> {
     const query = this.transactionRepository
       .createQueryBuilder('tx')
-      .leftJoin('tx.incomeSource', 'source') // Join incomeSource
+      .leftJoin('tx.incomeSource', 'source') // incomeSource 조인
       .where('tx.incomeSourceId = :sourceId', { sourceId });
 
     if (year && month) {
@@ -342,12 +342,12 @@ export class TransactionService {
         'totalExpense',
       )
       .addSelect('COALESCE(SUM(transaction.hours), 0)', 'totalHours')
-      .where('source.isActive = true'); // Filter active
+      .where('source.isActive = true'); // 활성 수입원만 필터링
 
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999); // Include full end day
+      end.setHours(23, 59, 59, 999); // 종료일의 마지막 시간까지 포함
 
       query.andWhere(
         'transaction.date >= :start AND transaction.date <= :end',
@@ -454,7 +454,7 @@ export class TransactionService {
 
       const result = await this.transactionRepository
         .createQueryBuilder('tx')
-        .leftJoin('tx.incomeSource', 'source') // Join
+        .leftJoin('tx.incomeSource', 'source') // 조인
         .select(
           'COALESCE(SUM(CASE WHEN tx.type = :revenue THEN tx.amount ELSE 0 END), 0)',
           'revenue',
@@ -468,7 +468,7 @@ export class TransactionService {
           startDate,
           endDate,
         })
-        .andWhere('source.isActive = true') // Filter active
+        .andWhere('source.isActive = true') // 활성 수입원만 필터링
         .setParameters({
           revenue: TransactionType.REVENUE,
           expense: TransactionType.EXPENSE,
@@ -548,7 +548,7 @@ export class TransactionService {
         'COALESCE(SUM(CASE WHEN tx.type = :revenue THEN tx.amount ELSE 0 END), 0)',
         'revenue',
       )
-      .where('source.isActive = true'); // Filter active
+      .where('source.isActive = true'); // 활성 수입원만 필터링
 
     if (year && month) {
       const startDate = new Date(year, month - 1, 1);
@@ -754,7 +754,7 @@ export class TransactionService {
         month: string;
         sourceId: string;
         revenue: string;
-        to_char?: string; // Optional property for some drivers
+        to_char?: string; // 일부 드라이버를 위한 선택적 속성
       }>();
 
     // 4. Zero-Filling 및 데이터 포맷팅

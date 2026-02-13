@@ -34,7 +34,7 @@ export class CreateTransactionDto {
 
   @ApiProperty({ description: '거래 날짜', example: '2023-10-27' })
   @IsDateString()
-  date: string; // ISO 8601 date string
+  date: string; // ISO 8601 날짜 문자열
 
   @ApiProperty({ description: '설명', example: '10월 애드센스 정산' })
   @IsString()

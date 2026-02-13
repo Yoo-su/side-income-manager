@@ -7,8 +7,8 @@
 ## 🏗 주요 컴포넌트
 
 - **IncomeSourceList**: 등록된 수입원들을 목록(List) 또는 그리드(Grid) 형태로 표시합니다.
-- **IncomeSourceItem**: 개별 수입원 카드로, 이름, 설명, 태그 등을 포함합니다.
-- **IncomeSourceDialog**: 수입원 생성 및 수정을 위한 모달 폼(Dialog)입니다.
+- **IncomeSourceCard**: 개별 수입원 카드로, 이름, 설명, 태그 등을 포함합니다.
+- **IncomeSourceFormDialog**: 수입원 생성 및 수정을 위한 모달 폼(Dialog)입니다.
 - **IncomeSourceDetail**: 특정 수입원의 상세 정보와 해당 수입원의 거래 내역을 보여주는 페이지입니다.
 
 ## 🔑 주요 역할

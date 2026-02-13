@@ -3,7 +3,7 @@
 ## 1. General Principles
 
 - **Maintainability & Extensibility**: Code must be written with future growth in mind.
-- **Documentation**: Every feature must have a `README.md` and `FLOW.md`.
+- **Documentation**: Every feature must have a `README.md`.
 - **Language**: All code, comments, and documentation must be in **Korean** (unless standard English terminology is required for technical precision).
 - **Type Safety**: The usage of the `any` type is **strictly prohibited**. Use generic types, `unknown`, or proper interfaces/types instead.
 
@@ -47,17 +47,8 @@
 - **Purpose**: Explains the feature's structure, responsibility, and usage.
 - **Sync**: Must be updated whenever the feature structure or logic changes.
 
-### `FLOW.md`
-
-- **Purpose**: Development log.
-- **Content**:
-  - What was implemented.
-  - Why changes were made (context, requirements).
-  - How it was implemented (technical details).
-- **Sync**: Must be updated with every significant change or commit.
-
 ## 6. Development Workflow
 
-1.  **Plan**: Understand requirements and update `FLOW.md` with the plan.
+1.  **Plan**: Understand requirements.
 2.  **Implement**: Write code following architectural rules.
-3.  **Document**: Update `README.md` and `FLOW.md` with the final implementation details.
+3.  **Document**: Update `README.md` with the final implementation details.

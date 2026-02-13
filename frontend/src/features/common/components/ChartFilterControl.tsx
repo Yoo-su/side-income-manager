@@ -24,7 +24,7 @@ export function ChartFilterControl({
   const handleTypeChange = (type: ChartFilterType) => {
     setSelectedType(type);
     if (type !== "custom") {
-      setDateRange(undefined); // Reset custom range when quick select is used
+      setDateRange(undefined); // 빠른 선택 사용 시 사용자 지정 범위 초기화
       onFilterChange(type);
     }
   };
