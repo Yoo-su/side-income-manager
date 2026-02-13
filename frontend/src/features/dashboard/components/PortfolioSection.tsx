@@ -7,15 +7,28 @@ import type { ApexOptions } from "apexcharts";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
+import {
+  ChartFilterControl,
+  type ChartFilterType,
+} from "@/features/common/components/ChartFilterControl";
+import type { DateRange } from "react-day-picker";
+
 interface PortfolioSectionProps {
   data: SourcePerformance[];
   className?: string;
+  onFilterChange?: (type: ChartFilterType, range?: DateRange) => void;
+  defaultType?: ChartFilterType;
 }
 
 type TabType = "revenue" | "netProfit" | "expense";
 
 /** 통합 포트폴리오 섹션 (탭: 총수익 / 순수익 / 지출) */
-export function PortfolioSection({ data, className }: PortfolioSectionProps) {
+export function PortfolioSection({
+  data,
+  className,
+  onFilterChange,
+  defaultType,
+}: PortfolioSectionProps) {
   const [activeTab, setActiveTab] = useState<TabType>("revenue");
 
   // 데이터 정렬 및 필터링
@@ -148,6 +161,15 @@ export function PortfolioSection({ data, className }: PortfolioSectionProps) {
           </TabsList>
         </Tabs>
       </CardHeader>
+      <div className="px-6 pb-2 flex justify-end">
+        {onFilterChange && (
+          <ChartFilterControl
+            onFilterChange={onFilterChange}
+            defaultType={defaultType || "1y"}
+            className="scale-90 origin-right"
+          />
+        )}
+      </div>
       <CardContent>
         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
           <div className="shrink-0 relative w-[240px] h-[240px]">

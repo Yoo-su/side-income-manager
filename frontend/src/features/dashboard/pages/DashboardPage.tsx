@@ -41,11 +41,11 @@ export function DashboardPage() {
       };
     }
 
-    // Quick Select presets
     let limit = 6;
+    if (chartFilterType === "3m") limit = 3;
     if (chartFilterType === "1y") limit = 12;
     if (chartFilterType === "3y") limit = 36;
-    if (chartFilterType === "3y") limit = 36;
+    if (chartFilterType === "all") limit = 999; // 대시보드 차트는 limit 방식이라 충분히 큰 수로 설정
 
     return { limit, startDate: undefined, endDate: undefined };
   };
@@ -55,6 +55,56 @@ export function DashboardPage() {
     startDate: chartStartDate,
     endDate: chartEndDate,
   } = getChartParams();
+
+  // 포트폴리오 필터 상태
+  const [portfolioFilterType, setPortfolioFilterType] =
+    useState<ChartFilterType>("1y");
+  const [portfolioDateRange, setPortfolioDateRange] = useState<
+    DateRange | undefined
+  >();
+
+  const getPortfolioParams = () => {
+    if (
+      portfolioFilterType === "custom" &&
+      portfolioDateRange?.from &&
+      portfolioDateRange?.to
+    ) {
+      return {
+        startDate: format(portfolioDateRange.from, "yyyy-MM-dd"),
+        endDate: format(portfolioDateRange.to, "yyyy-MM-dd"),
+      };
+    }
+
+    let limit = 6;
+    if (portfolioFilterType === "3m") limit = 3;
+    if (portfolioFilterType === "1y") limit = 12;
+    if (portfolioFilterType === "3y") limit = 36;
+    if (portfolioFilterType === "all") {
+      return { startDate: undefined, endDate: undefined };
+    }
+
+    // TODO: 백엔드가 limit 대신 startDate/endDate만 받으므로 변환 필요
+    // 현재 날짜 기준 limit 개월 전 1일 ~ 현재
+    const end = new Date();
+    const start = new Date();
+    start.setMonth(start.getMonth() - limit + 1);
+    start.setDate(1);
+
+    return {
+      startDate: format(start, "yyyy-MM-dd"),
+      endDate: format(end, "yyyy-MM-dd"),
+    };
+  };
+
+  const { startDate: pfStartDate, endDate: pfEndDate } = getPortfolioParams();
+
+  const handlePortfolioFilterChange = (
+    type: ChartFilterType,
+    range?: DateRange,
+  ) => {
+    setPortfolioFilterType(type);
+    if (range) setPortfolioDateRange(range);
+  };
 
   const { data: summary, isLoading: isSummaryLoading } = useQuery({
     queryKey: ["dashboard", "summary", year, month],
@@ -79,9 +129,21 @@ export function DashboardPage() {
   });
 
   const { data: rankingData, isLoading: isRankingLoading } = useQuery({
-    // 랭킹/포트폴리오는 연간 기준
-    queryKey: ["dashboard", "ranking", year],
-    queryFn: () => dashboardApi.getSourceRanking(year),
+    // 랭킹/포트폴리오는 연간 기준 -> 이제 필터 기준
+    queryKey: [
+      "dashboard",
+      "ranking",
+      portfolioFilterType,
+      pfStartDate,
+      pfEndDate,
+    ],
+    queryFn: () =>
+      dashboardApi.getSourceRanking(
+        undefined,
+        undefined,
+        pfStartDate,
+        pfEndDate,
+      ),
     placeholderData: (previousData) => previousData,
   });
 
@@ -204,7 +266,11 @@ export function DashboardPage() {
           {isRankingLoading ? (
             <Skeleton className="h-[300px] w-full rounded-xl" />
           ) : (
-            <PortfolioSection data={rankingData || []} />
+            <PortfolioSection
+              data={rankingData || []}
+              onFilterChange={handlePortfolioFilterChange}
+              defaultType="1y"
+            />
           )}
         </motion.div>
       </div>

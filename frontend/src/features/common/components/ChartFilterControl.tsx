@@ -4,7 +4,7 @@ import type { DateRange } from "react-day-picker";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-export type ChartFilterType = "6m" | "1y" | "3y" | "custom";
+export type ChartFilterType = "3m" | "6m" | "1y" | "3y" | "all" | "custom";
 
 interface ChartFilterControlProps {
   onFilterChange: (type: ChartFilterType, range?: DateRange) => void;
@@ -40,7 +40,7 @@ export function ChartFilterControl({
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       <div className="flex items-center space-x-1 rounded-md border bg-white p-1">
-        {(["6m", "1y", "3y"] as const).map((type) => (
+        {(["3m", "6m", "1y", "3y", "all"] as ChartFilterType[]).map((type) => (
           <Button
             key={type}
             variant={selectedType === type ? "secondary" : "ghost"}
@@ -51,9 +51,11 @@ export function ChartFilterControl({
               selectedType === type && "font-semibold text-foreground bg-muted",
             )}
           >
+            {type === "3m" && "3개월"}
             {type === "6m" && "6개월"}
             {type === "1y" && "1년"}
             {type === "3y" && "3년"}
+            {type === "all" && "전체"}
           </Button>
         ))}
       </div>

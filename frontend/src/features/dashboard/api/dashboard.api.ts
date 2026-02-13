@@ -48,10 +48,14 @@ export const dashboardApi = {
   getSourceRanking: async (
     year?: number,
     month?: number,
+    startDate?: string,
+    endDate?: string,
   ): Promise<SourcePerformance[]> => {
     const params = new URLSearchParams();
     if (year) params.append("year", year.toString());
     if (month) params.append("month", month.toString());
+    if (startDate) params.append("startDate", startDate);
+    if (endDate) params.append("endDate", endDate);
     const response = await instance.get(
       `/dashboard/source-ranking?${params.toString()}`,
     );

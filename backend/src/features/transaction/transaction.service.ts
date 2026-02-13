@@ -310,6 +310,8 @@ export class TransactionService {
   async getIncomeSourcePerformance(
     year?: number,
     month?: number,
+    startDate?: string,
+    endDate?: string,
   ): Promise<
     {
       sourceId: string;
@@ -342,16 +344,25 @@ export class TransactionService {
       .addSelect('COALESCE(SUM(transaction.hours), 0)', 'totalHours')
       .where('source.isActive = true'); // Filter active
 
-    if (year && month) {
-      const startDate = new Date(year, month - 1, 1);
-      const endDate = new Date(year, month, 1);
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999); // Include full end day
+
       query.andWhere(
-        'transaction.date >= :startDate AND transaction.date < :endDate',
+        'transaction.date >= :start AND transaction.date <= :end',
         {
-          startDate,
-          endDate,
+          start,
+          end,
         },
       );
+    } else if (year && month) {
+      const start = new Date(year, month - 1, 1);
+      const end = new Date(year, month, 1);
+      query.andWhere('transaction.date >= :start AND transaction.date < :end', {
+        start,
+        end,
+      });
     }
 
     const result = await query

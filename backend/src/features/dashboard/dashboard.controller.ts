@@ -98,8 +98,15 @@ export class DashboardController {
   async getSourceRanking(
     @Query('year') year?: number,
     @Query('month') month?: number,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ): Promise<SourcePerformanceDto[]> {
-    return this.transactionService.getIncomeSourcePerformance(year, month);
+    return this.transactionService.getIncomeSourcePerformance(
+      year,
+      month,
+      startDate,
+      endDate,
+    );
   }
   @Get('monthly-revenue-by-source')
   @ApiOperation({
