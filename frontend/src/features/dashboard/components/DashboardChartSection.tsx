@@ -128,12 +128,12 @@ export function DashboardChartSection({
       <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0">
         <div className="space-y-1">
           <CardTitle className="text-base font-semibold">
-            월별 추이 분석
+            수익 성장 그래프
           </CardTitle>
           <p className="text-sm text-muted-foreground">
             {viewMode === "total"
-              ? "선택된 기간 동안의 전체 수익/지출 흐름을 확인합니다."
-              : "상위 5개 수입원의 매출 변동 추이를 비교합니다."}
+              ? "내 수입이 어떻게 성장하고 있는지 확인해보세요."
+              : "주요 프로젝트들의 성과 변화를 비교해봅니다."}
           </p>
         </div>
         <Tabs

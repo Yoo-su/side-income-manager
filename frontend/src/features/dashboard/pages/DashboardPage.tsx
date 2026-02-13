@@ -169,7 +169,7 @@ export function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-foreground">
-                월별 요약
+                이번 달 성과
               </h3>
               <span className="text-sm text-muted-foreground">
                 ({selectedDate.getFullYear()}년 {selectedDate.getMonth() + 1}월)
@@ -200,7 +200,7 @@ export function DashboardPage() {
         <div className="space-y-4">
           <div className="space-y-1">
             <h3 className="text-lg font-semibold text-foreground">
-              수입원 인사이트
+              주요 프로젝트 현황
             </h3>
           </div>
 
@@ -229,7 +229,7 @@ export function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-foreground">
-                월별 추이 및 효율 분석
+                기간별 수익 흐름
               </h3>
             </div>
             <ChartFilterControl

@@ -138,10 +138,10 @@ export function PortfolioSection({
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <div className="space-y-1">
           <CardTitle className="text-base font-semibold">
-            수입원 포트폴리오
+            나의 수입 파이프라인
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            수입원별 성과 비중을 확인하세요.
+            내 수입이 어디서 나오는지 한눈에 확인하세요.
           </p>
         </div>
         <Tabs
