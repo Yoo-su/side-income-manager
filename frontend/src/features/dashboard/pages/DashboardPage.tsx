@@ -24,7 +24,7 @@ export function DashboardPage() {
   const month = selectedDate.getMonth() + 1;
 
   // 차트 필터 상태
-  const [chartFilterType, setChartFilterType] = useState<ChartFilterType>("6m");
+  const [chartFilterType, setChartFilterType] = useState<ChartFilterType>("1y");
   const [chartDateRange, setChartDateRange] = useState<DateRange | undefined>();
 
   // 필터에 따른 API 파라미터 계산
@@ -170,7 +170,10 @@ export function DashboardPage() {
                 월별 추이 및 효율 분석
               </h3>
             </div>
-            <ChartFilterControl onFilterChange={handleFilterChange} />
+            <ChartFilterControl
+              onFilterChange={handleFilterChange}
+              defaultType="1y"
+            />
           </div>
 
           <div className="grid grid-cols-1 gap-6">

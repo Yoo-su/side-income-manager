@@ -44,7 +44,7 @@ export function IncomeSourceDetail() {
   });
 
   // 차트 필터 상태
-  const [chartFilterType, setChartFilterType] = useState<ChartFilterType>("6m");
+  const [chartFilterType, setChartFilterType] = useState<ChartFilterType>("1y");
   const [chartDateRange, setChartDateRange] = useState<DateRange | undefined>();
 
   // 필터에 따른 API 파라미터 계산
@@ -352,7 +352,7 @@ export function IncomeSourceDetail() {
               </h3>
               <ChartFilterControl
                 onFilterChange={handleChartFilterChange}
-                defaultType="6m"
+                defaultType="1y"
                 className="scale-90 origin-right"
               />
             </div>

@@ -115,7 +115,7 @@ export function TrendChart({
     >
       <CardHeader>
         <CardTitle className="text-base font-semibold">
-          월별 수익 추이 (최근 6개월)
+          월별 수익 추이
         </CardTitle>
         <p className="text-xs text-muted-foreground">
           수익/지출 막대와 순수익(라인) 흐름을 확인하세요.
