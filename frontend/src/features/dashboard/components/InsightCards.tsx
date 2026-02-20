@@ -45,18 +45,18 @@ export function InsightCards({ data }: InsightCardsProps) {
           },
         },
       }}
-      className="grid gap-4 md:grid-cols-3"
+      className="grid gap-4 grid-cols-1 md:grid-cols-3"
     >
       {/* 1. 수익왕 (Revenue) */}
       <motion.div variants={item}>
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               최고 수익
             </CardTitle>
             <Trophy className="h-4 w-4 text-blue-600" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-1 md:p-6 md:pt-2">
             {topProfit ? (
               <>
                 <div className="text-xl font-bold text-foreground">
@@ -87,13 +87,13 @@ export function InsightCards({ data }: InsightCardsProps) {
       {/* 2. 효율왕 (Hourly Rate) */}
       <motion.div variants={item}>
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               최고 효율
             </CardTitle>
             <Zap className="h-4 w-4 text-purple-600" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-1 md:p-6 md:pt-2">
             {topEfficiency ? (
               <>
                 <div className="text-xl font-bold text-foreground">
@@ -121,13 +121,13 @@ export function InsightCards({ data }: InsightCardsProps) {
       {/* 3. 수익률왕 (ROI) */}
       <motion.div variants={item}>
         <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4 md:p-6">
+            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
               최고 수익률
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-rose-600" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 pt-1 md:p-6 md:pt-2">
             {topRoi ? (
               <>
                 <div className="text-xl font-bold text-foreground">

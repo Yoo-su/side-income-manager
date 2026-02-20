@@ -89,7 +89,7 @@ export function TransactionFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-white border-border">
+      <DialogContent className="w-[calc(100%-32px)] sm:w-full sm:max-w-[425px] bg-white border-border rounded-xl">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">
             {isEditing ? "거래 내역 수정" : "거래 내역 추가"}

@@ -69,6 +69,21 @@ export function MonthlyMiniChart({ data }: MonthlyMiniChartProps) {
       markers: { size: 5, shape: "circle" as const },
     },
     dataLabels: { enabled: false },
+    responsive: [
+      {
+        breakpoint: 768,
+        options: {
+          chart: { height: 200 },
+          xaxis: {
+            labels: {
+              style: { fontSize: "9px" },
+            },
+          },
+          stroke: { width: [0, 0, 2] },
+          legend: { fontSize: "10px" },
+        },
+      },
+    ],
   };
 
   const series = [
@@ -96,7 +111,7 @@ export function MonthlyMiniChart({ data }: MonthlyMiniChartProps) {
           월별 재무 흐름
         </CardTitle>
       </CardHeader>
-      <CardContent className="h-[250px] p-2">
+      <CardContent className="h-[200px] md:h-[250px] p-2">
         <ReactApexChart
           options={options}
           series={series}

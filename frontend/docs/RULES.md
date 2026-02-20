@@ -22,6 +22,7 @@
 ## 3. State Management
 
 - **Server State**: `TanStack Query` (React Query).
+  - 대량의 리스트(예: 거래 내역)를 조회할 때는 성능과 렌더링 최적화를 위해 **`useInfiniteQuery`를 사용한 무한 스크롤(Infinite Scroll)** 방식을 기본으로 합니다.
 - **Client State**: `Zustand`.
 
 ## 4. Technology Stack
@@ -38,7 +39,19 @@
   - **Colors**: Avoid overuse of gradients. Stick to solid, sophisticated color palettes.
 - **Tools**: Use **shadcn/ui** for rapid component development but customize base styles to avoid the "default shadcn look".
 
-## 5. Documentation Requirements
+## 6. Responsive Design (New)
+
+- **Mobile First**: 기본 스타일을 모바일 기준으로 작성하고, `md:`, `lg:` 프리픽스로 확장합니다.
+- **Breakpoints**: Tailwind 기본 브레이크포인트 준수.
+  - `sm`: 640px
+  - `md`: 768px (Tablet)
+  - `lg`: 1024px (Desktop)
+- **Layout Strategy**:
+  - **Navigation**: Desktop(Sidebar) → Tablet(Collapsed) → Mobile(Drawer/Hamburger).
+  - **Grid**: Desktop(4-5 col) → Tablet(2-3 col) → Mobile(1-2 col).
+  - **Charts**: 뷰포트에 따라 높이 가변 (`h-[250px]` ~ `h-[350px]`).
+
+## 7. Documentation Requirements
 
 **Every Feature Directory (`src/features/<feature-name>`) must contain:**
 
@@ -47,7 +60,7 @@
 - **Purpose**: Explains the feature's structure, responsibility, and usage.
 - **Sync**: Must be updated whenever the feature structure or logic changes.
 
-## 6. Development Workflow
+## 8. Development Workflow
 
 1.  **Plan**: Understand requirements.
 2.  **Implement**: Write code following architectural rules.

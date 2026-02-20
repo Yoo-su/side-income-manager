@@ -4,11 +4,16 @@ import type {
   Transaction,
   TransactionSummary,
   UpdateTransactionDto,
+  PaginatedResponse,
 } from "../types";
 
 export const transactionApi = {
-  getAll: async (sourceId?: string): Promise<Transaction[]> => {
-    const params = sourceId ? { sourceId } : {};
+  getAll: async (
+    sourceId?: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<PaginatedResponse<Transaction>> => {
+    const params = { ...(sourceId ? { sourceId } : {}), page, limit };
     const response = await instance.get("/transactions", { params });
     return response.data;
   },

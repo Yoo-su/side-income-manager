@@ -119,13 +119,30 @@ export function DashboardChartSection({
         formatter: (val: number) => `${val.toLocaleString()}원`,
       },
     },
+    responsive: [
+      {
+        breakpoint: 768,
+        options: {
+          chart: { height: 250 },
+          xaxis: {
+            labels: {
+              style: { fontSize: "10px" },
+              rotate: -45,
+              rotateAlways: false,
+              hideOverlappingLabels: true,
+            },
+          },
+          stroke: { width: 2 },
+        },
+      },
+    ],
   };
 
   return (
     <Card
       className={cn("border border-border bg-white shadow-none", className)}
     >
-      <CardHeader className="flex flex-row items-center justify-between pb-4 space-y-0">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 space-y-0">
         <div className="space-y-1">
           <CardTitle className="text-base font-semibold">
             수익 성장 그래프
@@ -154,7 +171,7 @@ export function DashboardChartSection({
         {viewMode === "total" ? (
           // 전체 흐름 (TrendChart)
           isTrendLoading ? (
-            <Skeleton className="h-[350px] w-full" />
+            <Skeleton className="h-[250px] md:h-[350px] w-full" />
           ) : (
             <div className="-mt-4">
               <TrendChart data={trendData || []} minimal />
@@ -162,9 +179,9 @@ export function DashboardChartSection({
           )
         ) : // 수입원별 비교 (Comparison)
         isComparisonLoading ? (
-          <Skeleton className="h-[350px] w-full" />
+          <Skeleton className="h-[250px] md:h-[350px] w-full" />
         ) : (
-          <div className="h-[340px] w-full">
+          <div className="h-[250px] md:h-[340px] w-full">
             {comparisonSeries.length > 0 ? (
               <ReactApexChart
                 options={comparisonOptions}

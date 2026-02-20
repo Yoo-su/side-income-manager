@@ -1,5 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useInView } from "react-intersection-observer";
 import { incomeSourceApi } from "../api/income-source.api";
 import {
   useTransactions,
@@ -97,7 +99,26 @@ export function IncomeSourceDetail() {
     enabled: !!id,
   });
 
-  const { data: transactions, isLoading: isTxLoading } = useTransactions(id!);
+  const {
+    data: transactionsData,
+    isLoading: isTxLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useTransactions(id!);
+
+  const { ref, inView } = useInView();
+
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, fetchNextPage, hasNextPage]);
+
+  // 모든 페이지의 트랜잭션 데이터를 1차원 배열로 평탄화
+  const allTransactions =
+    transactionsData?.pages.flatMap((page) => page.data) || [];
+
   const { data: summary, isLoading: isSummaryLoading } = useTransactionSummary(
     id!,
   );
@@ -135,7 +156,7 @@ export function IncomeSourceDetail() {
   */
 
   // 거래 내역 필터링
-  const filteredTransactions = transactions?.filter((tx) => {
+  const filteredTransactions = allTransactions.filter((tx) => {
     if (filter === "ALL") return true;
     return tx.type === filter;
   });
@@ -266,7 +287,7 @@ export function IncomeSourceDetail() {
 
   return (
     <PageTransition>
-      <div className="space-y-8 p-8 lg:p-10 max-w-5xl">
+      <div className="space-y-8 p-4 md:p-6 lg:p-10 max-w-5xl">
         {/* 뒤로 가기 */}
         <Button
           variant="ghost"
@@ -278,7 +299,7 @@ export function IncomeSourceDetail() {
         </Button>
 
         {/* 헤더 */}
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
               {incomeSource.name}
@@ -292,7 +313,7 @@ export function IncomeSourceDetail() {
           </div>
           <Button
             onClick={handleAddClick}
-            className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-5 text-sm"
+            className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-5 text-sm self-start"
           >
             <Plus className="mr-1.5 h-4 w-4" />
             기록 추가
@@ -302,7 +323,7 @@ export function IncomeSourceDetail() {
         {/* 상단: 요약 카드 + 미니 차트 */}
         <div className="grid grid-cols-1 gap-6">
           {/* 분석 지표 카드 (5칸 그리드) */}
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
             {summaryCards.map((card, index) => (
               <motion.div
                 key={card.title}
@@ -313,18 +334,18 @@ export function IncomeSourceDetail() {
                   duration: 0.4,
                   ease: "easeOut",
                 }}
-                className="h-full"
+                className="h-full min-w-0"
               >
-                <Card className="border border-border bg-white shadow-none h-full flex flex-col justify-center px-0">
-                  <CardHeader className="pb-1 pt-4 text-center">
-                    <CardTitle className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                <Card className="border border-border bg-white shadow-none h-full flex flex-col justify-center px-1 md:px-0 min-w-0">
+                  <CardHeader className="pb-1 pt-2 md:pt-4 text-center px-1 min-w-0">
+                    <CardTitle className="text-[10px] md:text-xs font-medium text-muted-foreground truncate">
                       {card.title}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="text-center pb-4 pt-1">
+                  <CardContent className="text-center pb-2 md:pb-4 pt-0 px-1 min-w-0">
                     <div
                       className={cn(
-                        "text-lg lg:text-xl font-bold tracking-tight whitespace-nowrap",
+                        "text-sm md:text-lg lg:text-xl font-bold tracking-tight truncate",
                         card.className // 지정된 색상이 있다면 사용
                           ? card.className
                           : card.emphasis
@@ -336,7 +357,7 @@ export function IncomeSourceDetail() {
                       {card.format(card.value)}
                     </div>
                     {card.subtext && (
-                      <p className="mt-1 text-[10px] text-muted-foreground/60">
+                      <p className="mt-1 text-[9px] md:text-[10px] text-muted-foreground/60 truncate">
                         {card.subtext}
                       </p>
                     )}
@@ -356,7 +377,6 @@ export function IncomeSourceDetail() {
                 selectedType={chartFilterType}
                 dateRange={chartDateRange}
                 onFilterChange={handleChartFilterChange}
-                className="scale-90 origin-right"
               />
             </div>
             {isStatsLoading ? (
@@ -369,7 +389,7 @@ export function IncomeSourceDetail() {
 
         {/* 거래 내역 */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold tracking-tight text-foreground">
               최근 거래 내역
             </h2>
@@ -412,10 +432,25 @@ export function IncomeSourceDetail() {
           </div>
 
           <TransactionList
-            transactions={filteredTransactions || []}
+            transactions={filteredTransactions}
             onEdit={handleEditClick}
             onDelete={handleDeleteTransaction}
           />
+
+          {/* 무한 스크롤 하단 감지 영역 */}
+          <div ref={ref} className="py-4 text-center">
+            {isFetchingNextPage ? (
+              <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+            ) : hasNextPage ? (
+              <span className="text-xs text-muted-foreground">
+                스크롤하여 더 보기
+              </span>
+            ) : filteredTransactions.length > 0 ? (
+              <span className="text-xs text-muted-foreground">
+                모든 내역을 불러왔습니다.
+              </span>
+            ) : null}
+          </div>
         </div>
 
         <TransactionFormDialog

@@ -42,25 +42,72 @@ export class TransactionService {
 
   /**
    * 모든 거래 내역을 조회합니다. (날짜/생성일 내림차순 정렬)
-   * @returns 거래 내역 목록
+   * @returns 거래 내역 목록 및 페이지네이션 정보
    */
-  async findAll(): Promise<Transaction[]> {
-    return await this.transactionRepository.find({
+  async findAll(
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<{
+    data: Transaction[];
+    meta: {
+      total: number;
+      page: number;
+      lastPage: number;
+      hasNextPage: boolean;
+    };
+  }> {
+    const [data, total] = await this.transactionRepository.findAndCount({
       order: { date: 'DESC', createdAt: 'DESC' },
       relations: ['incomeSource'],
+      take: limit,
+      skip: (page - 1) * limit,
     });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+      },
+    };
   }
 
   /**
    * 특정 수입원의 거래 내역을 조회합니다.
    * @param sourceId 수입원 ID
-   * @returns 해당 수입원의 거래 내역 목록
+   * @returns 해당 수입원의 거래 내역 목록 및 페이지네이션 정보
    */
-  async findAllBySourceId(sourceId: string): Promise<Transaction[]> {
-    return await this.transactionRepository.find({
+  async findAllBySourceId(
+    sourceId: string,
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<{
+    data: Transaction[];
+    meta: {
+      total: number;
+      page: number;
+      lastPage: number;
+      hasNextPage: boolean;
+    };
+  }> {
+    const [data, total] = await this.transactionRepository.findAndCount({
       where: { incomeSourceId: sourceId },
       order: { date: 'DESC', createdAt: 'DESC' },
+      take: limit,
+      skip: (page - 1) * limit,
     });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        lastPage: Math.ceil(total / limit),
+        hasNextPage: page * limit < total,
+      },
+    };
   }
 
   /**

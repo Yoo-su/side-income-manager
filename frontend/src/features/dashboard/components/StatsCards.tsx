@@ -129,15 +129,15 @@ export function StatsCards({ summary, month, isLoading }: StatsCardsProps) {
             }}
           >
             <Card className="border border-border bg-white shadow-none">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4 md:p-6">
+                <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
                   {card.title}
                 </CardTitle>
                 <card.icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
                 <div
-                  className={`text-2xl font-bold ${card.valueClassName || "text-foreground"}`}
+                  className={`text-lg md:text-2xl font-bold ${card.valueClassName || "text-foreground"} truncate`}
                 >
                   {card.prefix}
                   {card.value.toLocaleString()}

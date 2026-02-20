@@ -8,6 +8,8 @@ import {
   Delete,
   Query,
   ParseUUIDPipe,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { ApiTags, ApiResponse, ApiQuery, ApiOperation } from '@nestjs/swagger';
 import { TransactionService } from './transaction.service';
@@ -45,11 +47,27 @@ export class TransactionController {
     required: false,
     description: '수입원 ID로 필터링',
   })
-  findAll(@Query('sourceId') sourceId?: string) {
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    description: '조회할 페이지 번호 (기본: 1)',
+    type: Number,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: '페이지당 항목 수 (기본: 20)',
+    type: Number,
+  })
+  findAll(
+    @Query('sourceId') sourceId?: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number = 20,
+  ) {
     if (sourceId) {
-      return this.transactionService.findAllBySourceId(sourceId);
+      return this.transactionService.findAllBySourceId(sourceId, page, limit);
     }
-    return this.transactionService.findAll();
+    return this.transactionService.findAll(page, limit);
   }
 
   @Get(':id')

@@ -5,7 +5,7 @@ import { PageTransition } from "@/components/layout/PageTransition";
 const IncomeSourcePage = () => {
   return (
     <PageTransition>
-      <div className="space-y-8 p-8 lg:p-10">
+      <div className="space-y-8 p-4 md:p-6 lg:p-10">
         {/* 페이지 헤더 */}
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">

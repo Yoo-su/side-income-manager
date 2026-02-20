@@ -1,11 +1,25 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
 import { transactionApi } from "../api/transaction.api";
 import type { CreateTransactionDto, UpdateTransactionDto } from "../types";
 
-export function useTransactions(sourceId: string) {
-  return useQuery({
-    queryKey: ["transactions", sourceId],
-    queryFn: () => transactionApi.getAll(sourceId),
+export function useTransactions(sourceId: string, limit: number = 20) {
+  return useInfiniteQuery({
+    queryKey: ["transactions", sourceId, "infinite"],
+    queryFn: ({ pageParam = 1 }) =>
+      transactionApi.getAll(sourceId, pageParam as number, limit),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      // 다음 페이지가 있으면 next page index 반환, 없으면 undefined
+      if (lastPage.meta.hasNextPage) {
+        return lastPage.meta.page + 1;
+      }
+      return undefined;
+    },
     enabled: !!sourceId,
   });
 }
@@ -25,7 +39,7 @@ export function useCreateTransaction() {
     mutationFn: (data: CreateTransactionDto) => transactionApi.create(data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: ["transactions", variables.incomeSourceId],
+        queryKey: ["transactions", variables.incomeSourceId, "infinite"],
       });
       queryClient.invalidateQueries({
         queryKey: ["transactions", "summary", variables.incomeSourceId],
@@ -53,7 +67,9 @@ export function useUpdateTransaction() {
       const sourceId = data.incomeSourceId; // 백엔드 엔티티에 있음
 
       if (sourceId) {
-        queryClient.invalidateQueries({ queryKey: ["transactions", sourceId] });
+        queryClient.invalidateQueries({
+          queryKey: ["transactions", sourceId, "infinite"],
+        });
         queryClient.invalidateQueries({
           queryKey: ["transactions", "summary", sourceId],
         });

@@ -32,7 +32,7 @@ export function TransactionList({
         return (
           <motion.div
             key={tx.id}
-            className="flex items-center justify-between rounded-xl border border-border bg-white px-5 py-4 transition-colors hover:bg-neutral-50"
+            className="flex flex-col sm:flex-row sm:items-center justify-between rounded-xl border border-border bg-white p-3 md:px-5 md:py-4 transition-colors hover:bg-neutral-50 gap-1 sm:gap-2"
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{
@@ -41,23 +41,26 @@ export function TransactionList({
               ease: "easeOut",
             }}
           >
-            {/* 좌측: 아이콘 + 정보 */}
-            <div className="flex items-center gap-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100">
+            {/* 좌측/상단: 아이콘 + 정보 */}
+            <div className="flex items-start sm:items-center gap-3 md:gap-4 min-w-0 flex-1 w-full sm:w-auto">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100 mt-0.5 sm:mt-0">
                 {isRevenue ? (
                   <ArrowUp className="h-4 w-4 text-neutral-700" />
                 ) : (
                   <ArrowDown className="h-4 w-4 text-neutral-400" />
                 )}
               </div>
-              <div className="cursor-pointer" onClick={() => onEdit(tx)}>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-foreground hover:underline">
+              <div
+                className="cursor-pointer min-w-0 flex-1"
+                onClick={() => onEdit(tx)}
+              >
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="text-sm font-medium text-foreground hover:underline truncate">
                     {tx.description}
                   </p>
                   {tx.hours && Number(tx.hours) > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
-                      <Clock size={12} />
+                    <span className="inline-flex items-center gap-1 rounded-md bg-orange-100 px-1.5 py-0.5 text-[10px] sm:text-xs font-medium text-orange-700 whitespace-nowrap shrink-0">
+                      <Clock size={12} className="shrink-0" />
                       {Number(tx.hours)}시간
                     </span>
                   )}
@@ -68,22 +71,22 @@ export function TransactionList({
               </div>
             </div>
 
-            {/* 우측: 금액 + 액션 */}
-            <div className="flex items-center gap-3">
+            {/* 우측/하단: 금액 + 액션 */}
+            <div className="flex items-center justify-between sm:justify-end gap-3 pl-12 sm:pl-0 w-full sm:w-auto mt-1 sm:mt-0">
               <span
                 className={
                   isRevenue
-                    ? "text-sm font-semibold text-emerald-600"
-                    : "text-sm font-semibold text-rose-600"
+                    ? "text-sm font-semibold text-emerald-600 truncate"
+                    : "text-sm font-semibold text-rose-600 truncate"
                 }
               >
                 {isRevenue ? "+" : "-"} {Number(tx.amount).toLocaleString()}원
               </span>
-              <div className="flex items-center">
+              <div className="flex items-center -mr-2 sm:mr-0 shrink-0">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground/40 hover:text-foreground"
+                  className="h-8 w-8 text-muted-foreground/40 hover:text-foreground active:bg-neutral-100"
                   onClick={() => onEdit(tx)}
                 >
                   <Edit2 size={14} />
@@ -91,7 +94,7 @@ export function TransactionList({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground/40 hover:text-foreground"
+                  className="h-8 w-8 text-muted-foreground/40 hover:text-foreground active:bg-neutral-100"
                   onClick={() => onDelete(tx.id)}
                 >
                   <Trash2 size={14} />

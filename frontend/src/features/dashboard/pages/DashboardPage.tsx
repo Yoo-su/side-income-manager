@@ -150,7 +150,7 @@ export function DashboardPage() {
 
   return (
     <PageTransition>
-      <div className="space-y-6 p-8 pt-6 lg:p-10 max-w-[1600px] mx-auto">
+      <div className="space-y-6 p-4 pt-4 md:p-6 lg:p-10 max-w-[1600px] mx-auto">
         {/* 페이지 헤더 */}
         <div>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -162,7 +162,7 @@ export function DashboardPage() {
         </div>
         {/* 1. 핵심 지표 카드 */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold text-foreground">
                 이번 달 성과
@@ -222,7 +222,7 @@ export function DashboardPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <h3 className="text-lg font-semibold text-foreground">
                 기간별 수익 흐름

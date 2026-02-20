@@ -31,7 +31,12 @@ export function ChartFilterControl({
   };
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+    <div
+      className={cn(
+        "flex items-center gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
+        className,
+      )}
+    >
       <div className="flex items-center space-x-1 rounded-md border bg-white p-1">
         {(["3m", "6m", "1y", "3y"] as ChartFilterType[]).map((type) => (
           <Button
@@ -42,6 +47,7 @@ export function ChartFilterControl({
             className={cn(
               "h-7 px-3 text-xs",
               selectedType === type && "font-semibold text-foreground bg-muted",
+              type === "3y" && "hidden sm:inline-flex",
             )}
           >
             {type === "3m" && "3개월"}

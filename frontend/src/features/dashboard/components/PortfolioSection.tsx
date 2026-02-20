@@ -137,7 +137,7 @@ export function PortfolioSection({
     <Card
       className={cn("border border-border bg-white shadow-none", className)}
     >
-      <CardHeader className="flex flex-row items-center justify-between pb-4">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4">
         <div className="space-y-1">
           <CardTitle className="text-base font-semibold">
             나의 수입 파이프라인
@@ -163,24 +163,23 @@ export function PortfolioSection({
           </TabsList>
         </Tabs>
       </CardHeader>
-      <div className="px-6 pb-2 flex justify-end">
+      <div className="px-4 md:px-6 pb-2 flex justify-end">
         <ChartFilterControl
           selectedType={selectedType}
           dateRange={dateRange}
           onFilterChange={onFilterChange}
-          className="scale-90 origin-right"
         />
       </div>
       <CardContent>
         <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-          <div className="shrink-0 relative w-[240px] h-[240px]">
+          <div className="shrink-0 relative w-[160px] h-[160px] md:w-[240px] md:h-[240px] mx-auto md:mx-0">
             {chartData.length > 0 ? (
               <ReactApexChart
                 options={chartOptions}
                 series={chartSeries}
                 type="donut"
-                height={240}
-                width={240}
+                height="100%"
+                width="100%"
               />
             ) : (
               <div className="flex items-center justify-center w-full h-full text-sm text-muted-foreground bg-neutral-50 rounded-full">
