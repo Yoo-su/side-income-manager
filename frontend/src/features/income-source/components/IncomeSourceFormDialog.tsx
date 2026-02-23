@@ -33,7 +33,7 @@ import {
   useUpdateIncomeSource,
 } from "../hooks/useIncomeSources";
 import { useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Spinner, PlusCircle, PencilSimple } from "@phosphor-icons/react";
 import { IncomeSourceTypeLabel } from "@/shared/constants/localization";
 
 const formSchema = z.object({
@@ -113,16 +113,27 @@ export function IncomeSourceFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-white border-border">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">
-            {isEditing ? "수입원 수정" : "새 수입원 추가"}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditing
-              ? "수입원 정보를 수정합니다."
-              : "새로운 파이프라인을 추가하여 관리하세요."}
-          </DialogDescription>
+      <DialogContent className="w-[calc(100%-32px)] sm:max-w-[425px] bg-white border-border rounded-xl">
+        <DialogHeader className="mb-2">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-900 text-white">
+              {isEditing ? (
+                <PencilSimple size={20} weight="bold" />
+              ) : (
+                <PlusCircle size={20} weight="bold" />
+              )}
+            </div>
+            <div className="flex flex-col text-left">
+              <DialogTitle className="text-xl font-bold">
+                {isEditing ? "수입원 수정" : "새 수입원 추가"}
+              </DialogTitle>
+              <DialogDescription className="text-sm mt-0.5 text-slate-500">
+                {isEditing
+                  ? "파이프라인 정보를 업데이트합니다."
+                  : "새로운 수익 파이프라인을 연결하세요."}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <Form {...form}>
@@ -132,10 +143,13 @@ export function IncomeSourceFormDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">이름</FormLabel>
+                  <FormLabel className="text-sm font-semibold text-slate-700">
+                    이름
+                  </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="예: 블로그 수익, 외주 프로젝트"
+                      className="h-12 rounded-xl border-slate-200 bg-white focus-visible:ring-slate-700"
                       {...field}
                     />
                   </FormControl>
@@ -149,20 +163,26 @@ export function IncomeSourceFormDialog({
               name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">유형</FormLabel>
+                  <FormLabel className="text-sm font-semibold text-slate-700">
+                    유형
+                  </FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
                     value={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-white focus:ring-slate-700">
                         <SelectValue placeholder="유형을 선택하세요" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl border-slate-200">
                       {Object.values(IncomeSourceType).map((type) => (
-                        <SelectItem key={type} value={type}>
+                        <SelectItem
+                          key={type}
+                          value={type}
+                          className="rounded-lg focus:bg-slate-100 focus:text-slate-900 cursor-pointer"
+                        >
                           {IncomeSourceTypeLabel[type]}
                         </SelectItem>
                       ))}
@@ -178,11 +198,13 @@ export function IncomeSourceFormDialog({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium">설명</FormLabel>
+                  <FormLabel className="text-sm font-semibold text-slate-700">
+                    설명
+                  </FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="상세 내용을 입력하세요 (선택)"
-                      className="resize-none"
+                      className="resize-none min-h-[100px] rounded-xl border-slate-200 bg-white focus-visible:ring-slate-700 p-3"
                       {...field}
                     />
                   </FormControl>
@@ -191,20 +213,13 @@ export function IncomeSourceFormDialog({
               )}
             />
 
-            <DialogFooter className="pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
-                취소
-              </Button>
+            <DialogFooter className="pt-6">
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-foreground text-background hover:bg-foreground/90"
+                className="w-full h-14 bg-slate-900 text-white rounded-xl text-[15px] font-bold hover:bg-slate-800 transition-colors shadow-sm"
               >
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isLoading && <Spinner className="mr-2 h-5 w-5 animate-spin" />}
                 {isEditing ? "수정 완료" : "추가하기"}
               </Button>
             </DialogFooter>

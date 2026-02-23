@@ -31,22 +31,37 @@ export class TransactionService {
   /**
    * 새로운 거래 내역을 생성합니다.
    * @param createTransactionDto 거래 내역 생성 DTO
+   * @param userId 사용자 ID
    * @returns 생성된 거래 내역
    */
   async create(
     createTransactionDto: CreateTransactionDto,
+    userId: string,
   ): Promise<Transaction> {
+    const is = await this.transactionRepository.manager.findOne(
+      'IncomeSource',
+      {
+        where: { id: createTransactionDto.incomeSourceId, userId },
+      },
+    );
+    if (!is) {
+      throw new NotFoundException('수입원을 찾을 수 없거나 권한이 없습니다.');
+    }
     const transaction = this.transactionRepository.create(createTransactionDto);
     return await this.transactionRepository.save(transaction);
   }
 
   /**
    * 모든 거래 내역을 조회합니다. (날짜/생성일 내림차순 정렬)
+   * @param page
+   * @param limit
+   * @param userId
    * @returns 거래 내역 목록 및 페이지네이션 정보
    */
   async findAll(
     page: number = 1,
     limit: number = 20,
+    userId: string,
   ): Promise<{
     data: Transaction[];
     meta: {
@@ -57,6 +72,7 @@ export class TransactionService {
     };
   }> {
     const [data, total] = await this.transactionRepository.findAndCount({
+      where: { incomeSource: { userId } },
       order: { date: 'DESC', createdAt: 'DESC' },
       relations: ['incomeSource'],
       take: limit,
@@ -77,12 +93,16 @@ export class TransactionService {
   /**
    * 특정 수입원의 거래 내역을 조회합니다.
    * @param sourceId 수입원 ID
+   * @param page
+   * @param limit
+   * @param userId
    * @returns 해당 수입원의 거래 내역 목록 및 페이지네이션 정보
    */
   async findAllBySourceId(
     sourceId: string,
     page: number = 1,
     limit: number = 20,
+    userId: string,
   ): Promise<{
     data: Transaction[];
     meta: {
@@ -93,8 +113,9 @@ export class TransactionService {
     };
   }> {
     const [data, total] = await this.transactionRepository.findAndCount({
-      where: { incomeSourceId: sourceId },
+      where: { incomeSourceId: sourceId, incomeSource: { userId } },
       order: { date: 'DESC', createdAt: 'DESC' },
+      relations: ['incomeSource'],
       take: limit,
       skip: (page - 1) * limit,
     });
@@ -113,12 +134,13 @@ export class TransactionService {
   /**
    * 특정 ID의 거래 내역을 조회합니다.
    * @param id 거래 내역 ID
+   * @param userId 사용자 ID
    * @returns 거래 내역 정보
    * @throws NotFoundException 해당 ID의 거래 내역이 없을 경우
    */
-  async findOne(id: string): Promise<Transaction> {
+  async findOne(id: string, userId: string): Promise<Transaction> {
     const transaction = await this.transactionRepository.findOne({
-      where: { id },
+      where: { id, incomeSource: { userId } },
       relations: ['incomeSource'],
     });
     if (!transaction) {
@@ -131,13 +153,15 @@ export class TransactionService {
    * 거래 내역을 수정합니다.
    * @param id 거래 내역 ID
    * @param updateTransactionDto 수정할 데이터 DTO
+   * @param userId 사용자 ID
    * @returns 수정된 거래 내역
    */
   async update(
     id: string,
     updateTransactionDto: UpdateTransactionDto,
+    userId: string,
   ): Promise<Transaction> {
-    const transaction = await this.findOne(id);
+    const transaction = await this.findOne(id, userId);
     Object.assign(transaction, updateTransactionDto);
     return await this.transactionRepository.save(transaction);
   }
@@ -145,13 +169,12 @@ export class TransactionService {
   /**
    * 거래 내역을 삭제합니다.
    * @param id 거래 내역 ID
+   * @param userId 사용자 ID
    * @throws NotFoundException 해당 ID의 거래 내역이 없을 경우
    */
-  async remove(id: string): Promise<void> {
-    const result = await this.transactionRepository.delete(id);
-    if (result.affected === 0) {
-      throw new NotFoundException(`Transaction with ID ${id} not found`);
-    }
+  async remove(id: string, userId: string): Promise<void> {
+    const transaction = await this.findOne(id, userId);
+    await this.transactionRepository.remove(transaction);
   }
 
   /**
@@ -159,12 +182,14 @@ export class TransactionService {
    * @param sourceId 수입원 ID
    * @param year 조회할 연도 (선택)
    * @param month 조회할 월 (선택)
+   * @param userId 사용자 ID
    * @returns 요약 정보 객체
    */
   async getSummaryBySourceId(
     sourceId: string,
     year?: number,
     month?: number,
+    userId?: string,
   ): Promise<{
     revenue: number;
     expense: number;
@@ -173,10 +198,12 @@ export class TransactionService {
     hourlyRate: number;
     roi: number;
   }> {
+    if (!userId) throw new NotFoundException('사용자 정보가 누락되었습니다.');
     const query = this.transactionRepository
       .createQueryBuilder('tx')
       .leftJoin('tx.incomeSource', 'source') // incomeSource 조인
-      .where('tx.incomeSourceId = :sourceId', { sourceId });
+      .where('tx.incomeSourceId = :sourceId', { sourceId })
+      .andWhere('source.userId = :userId', { userId });
 
     if (year && month) {
       const startDate = new Date(year, month - 1, 1);
@@ -234,15 +261,18 @@ export class TransactionService {
    * @param year 조회할 연도 (startDate/endDate가 없을 경우 사용)
    * @param startDate 시작 날짜 (YYYY-MM-DD)
    * @param endDate 종료 날짜 (YYYY-MM-DD)
+   * @param userId 사용자 ID
    * @returns 월별 통계 리스트
    */
   async getMonthlyStats(
     year?: number,
     startDate?: string,
     endDate?: string,
+    userId?: string,
   ): Promise<
     { month: string; revenue: number; expense: number; netProfit: number }[]
   > {
+    if (!userId) throw new NotFoundException('사용자 정보가 누락되었습니다.');
     let start: Date;
     let end: Date;
 
@@ -273,6 +303,7 @@ export class TransactionService {
       .where('transaction.date >= :start', { start })
       .andWhere('transaction.date <= :end', { end })
       .andWhere('source.isActive = true')
+      .andWhere('source.userId = :userId', { userId })
       .groupBy("TO_CHAR(transaction.date, 'YYYY-MM')")
       .orderBy('month', 'ASC')
       .setParameters({
@@ -326,10 +357,12 @@ export class TransactionService {
   /**
    * 최근 N개월간의 월별 통계를 조회합니다.
    * @param limit 조회할 개월 수 (기본: 6)
+   * @param userId 사용자 ID
    * @returns 월별 통계 리스트
    */
   async getRecentMonthlyStats(
     limit: number,
+    userId?: string,
   ): Promise<
     { month: string; revenue: number; expense: number; netProfit: number }[]
   > {
@@ -343,6 +376,7 @@ export class TransactionService {
       undefined,
       start.toISOString().split('T')[0],
       end.toISOString().split('T')[0],
+      userId,
     );
   }
 
@@ -352,6 +386,9 @@ export class TransactionService {
    * 순수익 내림차순으로 정렬됩니다.
    * @param year 조회할 연도 (선택)
    * @param month 조회할 월 (선택)
+   * @param startDate 시작 날짜 (YYYY-MM-DD, 선택)
+   * @param endDate 종료 날짜 (YYYY-MM-DD, 선택)
+   * @param userId 사용자 ID
    * @returns 수입원별 성과 리스트 (순수익, 매출, 비용, 시간, ROI, 시간당 수익 포함)
    */
   async getIncomeSourcePerformance(
@@ -359,6 +396,7 @@ export class TransactionService {
     month?: number,
     startDate?: string,
     endDate?: string,
+    userId?: string,
   ): Promise<
     {
       sourceId: string;
@@ -371,6 +409,7 @@ export class TransactionService {
       hourlyRate: number;
     }[]
   > {
+    if (!userId) throw new NotFoundException('사용자 정보가 누락되었습니다.');
     const query = this.transactionRepository
       .createQueryBuilder('transaction')
       .leftJoinAndSelect('transaction.incomeSource', 'source')
@@ -389,7 +428,8 @@ export class TransactionService {
         'totalExpense',
       )
       .addSelect('COALESCE(SUM(transaction.hours), 0)', 'totalHours')
-      .where('source.isActive = true'); // 활성 수입원만 필터링
+      .where('source.isActive = true')
+      .andWhere('source.userId = :userId', { userId }); // 사용자 필터링
 
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -462,11 +502,13 @@ export class TransactionService {
    * 선택된 년/월과 그 전월(혹은 전년 동월)의 수익, 지출, 순수익, 투입 시간을 비교하고 증감률을 계산합니다.
    * @param year 조회할 연도 (기본: 현재)
    * @param month 조회할 월 (기본: 현재)
+   * @param userId 사용자 ID
    * @returns 대시보드 요약 정보
    */
   async getDashboardSummary(
     year?: number,
     month?: number,
+    userId?: string,
   ): Promise<{
     currentMonth: {
       revenue: number;
@@ -487,6 +529,7 @@ export class TransactionService {
       totalHours: number | null;
     };
   }> {
+    if (!userId) throw new NotFoundException('사용자 정보가 누락되었습니다.');
     const now = new Date();
     const currentYear = year || now.getFullYear();
     const currentMonth = month || now.getMonth() + 1;
@@ -516,6 +559,7 @@ export class TransactionService {
           endDate,
         })
         .andWhere('source.isActive = true') // 활성 수입원만 필터링
+        .andWhere('source.userId = :userId', { userId })
         .setParameters({
           revenue: TransactionType.REVENUE,
           expense: TransactionType.EXPENSE,
@@ -573,11 +617,13 @@ export class TransactionService {
    * 특정 연/월이 주어지면 해당 기간으로 필터링합니다.
    * @param year 조회할 연도 (선택)
    * @param month 조회할 월 (선택)
+   * @param userId 사용자 ID
    * @returns 수입원별 매출 비중 리스트
    */
   async getPortfolioDistribution(
     year?: number,
     month?: number,
+    userId?: string,
   ): Promise<
     {
       sourceId: string;
@@ -586,6 +632,7 @@ export class TransactionService {
       percentage: number;
     }[]
   > {
+    if (!userId) throw new NotFoundException('사용자 정보가 누락되었습니다.');
     const query = this.transactionRepository
       .createQueryBuilder('tx')
       .leftJoin('tx.incomeSource', 'source')
@@ -595,7 +642,8 @@ export class TransactionService {
         'COALESCE(SUM(CASE WHEN tx.type = :revenue THEN tx.amount ELSE 0 END), 0)',
         'revenue',
       )
-      .where('source.isActive = true'); // 활성 수입원만 필터링
+      .where('source.isActive = true') // 활성 수입원만 필터링
+      .andWhere('source.userId = :userId', { userId }); // 유저 필터
 
     if (year && month) {
       const startDate = new Date(year, month - 1, 1);
@@ -638,6 +686,7 @@ export class TransactionService {
    * @param limit 조회할 개월 수 (기본값: 6, startDate/endDate가 없을 때만 사용)
    * @param startDate 시작 날짜 (YYYY-MM-DD)
    * @param endDate 종료 날짜 (YYYY-MM-DD)
+   * @param userId 사용자 ID
    * @returns 월별 통계 리스트
    */
   async getMonthlyStatsBySourceId(
@@ -645,9 +694,11 @@ export class TransactionService {
     limit: number = 6,
     startDate?: string,
     endDate?: string,
+    userId?: string,
   ): Promise<
     { month: string; revenue: number; expense: number; netProfit: number }[]
   > {
+    if (!userId) throw new NotFoundException('사용자 정보가 누락되었습니다.');
     let start: Date;
     let end: Date;
 
@@ -666,6 +717,7 @@ export class TransactionService {
 
     const result = await this.transactionRepository
       .createQueryBuilder('tx')
+      .leftJoin('tx.incomeSource', 'source')
       .select("TO_CHAR(tx.date, 'YYYY-MM')", 'month')
       .addSelect(
         'COALESCE(SUM(CASE WHEN tx.type = :revenue THEN tx.amount ELSE 0 END), 0)',
@@ -676,6 +728,7 @@ export class TransactionService {
         'expense',
       )
       .where('tx.incomeSourceId = :sourceId', { sourceId })
+      .andWhere('source.userId = :userId', { userId })
       .andWhere('tx.date >= :start', { start })
       .andWhere('tx.date <= :end', { end })
       .groupBy("TO_CHAR(tx.date, 'YYYY-MM')")
@@ -730,12 +783,14 @@ export class TransactionService {
    * @param limit 조회할 개월 수 (startDate/endDate가 없을 때만 사용)
    * @param startDate 시작 날짜
    * @param endDate 종료 날짜
+   * @param userId 사용자 ID
    * @returns 월별/수입원별 매출 데이터
    */
   async getMonthlyRevenuePatterns(
     limit: number,
     startDate?: string,
     endDate?: string,
+    userId?: string,
   ): Promise<
     {
       month: string;
@@ -744,6 +799,7 @@ export class TransactionService {
       revenue: number;
     }[]
   > {
+    if (!userId) throw new NotFoundException('사용자 정보가 누락되었습니다.');
     // 1. 기간 설정
     let start: Date;
     let end: Date;
@@ -770,6 +826,7 @@ export class TransactionService {
       .andWhere('tx.date <= :end', { end })
       .andWhere('tx.type = :type', { type: TransactionType.REVENUE })
       .andWhere('source.isActive = true')
+      .andWhere('source.userId = :userId', { userId })
       .groupBy('source.id')
       .addGroupBy('source.name')
       .orderBy('total', 'DESC')
@@ -794,6 +851,7 @@ export class TransactionService {
       .andWhere('tx.date <= :end', { end })
       .andWhere('tx.type = :type', { type: TransactionType.REVENUE })
       .andWhere('source.id IN (:...sourceIds)', { sourceIds })
+      .andWhere('source.userId = :userId', { userId })
       .groupBy("TO_CHAR(tx.date, 'YYYY-MM')")
       .addGroupBy('source.id')
       .orderBy('month', 'ASC')

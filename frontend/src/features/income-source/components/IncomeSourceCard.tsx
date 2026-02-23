@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { type IncomeSource } from "../types";
-import { Edit2, Trash2 } from "lucide-react";
+import { PencilSimple, Trash } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { IncomeSourceTypeLabel } from "@/shared/constants/localization";
 import { useNavigate } from "react-router-dom";
@@ -66,7 +66,7 @@ export const IncomeSourceCard = ({
                 className="h-8 w-8 text-muted-foreground hover:text-foreground"
                 onClick={() => onEdit(item)}
               >
-                <Edit2 size={14} />
+                <PencilSimple size={14} />
               </Button>
               <Button
                 variant="ghost"
@@ -74,7 +74,7 @@ export const IncomeSourceCard = ({
                 className="h-8 w-8 text-muted-foreground hover:text-foreground"
                 onClick={() => onDelete(item.id)}
               >
-                <Trash2 size={14} />
+                <Trash size={14} />
               </Button>
             </div>
           </div>

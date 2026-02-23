@@ -1,6 +1,6 @@
 import { type Transaction, TransactionType } from "../../transaction/types";
 import { format } from "date-fns";
-import { Trash2, ArrowUp, ArrowDown, Edit2, Clock } from "lucide-react";
+import { Trash, ArrowUp, ArrowDown, PencilSimple, Clock } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
@@ -89,7 +89,7 @@ export function TransactionList({
                   className="h-8 w-8 text-muted-foreground/40 hover:text-foreground active:bg-neutral-100"
                   onClick={() => onEdit(tx)}
                 >
-                  <Edit2 size={14} />
+                  <PencilSimple size={14} />
                 </Button>
                 <Button
                   variant="ghost"
@@ -97,7 +97,7 @@ export function TransactionList({
                   className="h-8 w-8 text-muted-foreground/40 hover:text-foreground active:bg-neutral-100"
                   onClick={() => onDelete(tx.id)}
                 >
-                  <Trash2 size={14} />
+                  <Trash size={14} />
                 </Button>
               </div>
             </div>

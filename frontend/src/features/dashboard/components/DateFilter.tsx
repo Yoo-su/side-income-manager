@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { addMonths, subMonths, isAfter, startOfMonth } from "date-fns";
 
 interface DateFilterProps {
@@ -66,7 +66,7 @@ export function DateFilter({ selectedDate, onDateChange }: DateFilterProps) {
         onClick={handlePrevMonth}
         className="h-8 w-8 text-muted-foreground hover:text-foreground"
       >
-        <ChevronLeft className="h-4 w-4" />
+        <CaretLeft className="h-4 w-4" />
       </Button>
 
       <div className="flex items-center gap-1">
@@ -74,7 +74,7 @@ export function DateFilter({ selectedDate, onDateChange }: DateFilterProps) {
           value={selectedDate.getFullYear().toString()}
           onValueChange={handleYearChange}
         >
-          <SelectTrigger className="h-8 w-[100px] border-none bg-transparent focus:ring-0 text-sm font-semibold">
+          <SelectTrigger className="h-8 w-[100px] border-none bg-transparent focus:ring-0 text-sm font-semibold justify-center gap-1">
             <SelectValue placeholder="Year" />
           </SelectTrigger>
           <SelectContent>
@@ -90,7 +90,7 @@ export function DateFilter({ selectedDate, onDateChange }: DateFilterProps) {
           value={(selectedDate.getMonth() + 1).toString()}
           onValueChange={handleMonthChange}
         >
-          <SelectTrigger className="h-8 w-[80px] border-none bg-transparent focus:ring-0 text-sm font-semibold">
+          <SelectTrigger className="h-8 w-[80px] border-none bg-transparent focus:ring-0 text-sm font-semibold justify-center gap-1">
             <SelectValue placeholder="Month" />
           </SelectTrigger>
           <SelectContent>
@@ -117,7 +117,7 @@ export function DateFilter({ selectedDate, onDateChange }: DateFilterProps) {
         disabled={isNextDisabled}
         className="h-8 w-8 text-muted-foreground hover:text-foreground disabled:opacity-30"
       >
-        <ChevronRight className="h-4 w-4" />
+        <CaretRight className="h-4 w-4" />
       </Button>
     </div>
   );

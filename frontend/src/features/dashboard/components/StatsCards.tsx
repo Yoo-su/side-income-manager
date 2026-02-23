@@ -1,15 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  BarChart3,
-  TrendingUp,
-  TrendingDown,
-  ArrowUpRight,
-  ArrowDownRight,
+  Wallet,
+  CreditCard,
+  ArrowCircleUpRight,
+  ArrowCircleDownRight,
   Minus,
   Clock,
-  type LucideIcon,
-} from "lucide-react";
+  Coins,
+} from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import type { DashboardSummary } from "../types";
 
@@ -26,23 +25,31 @@ interface LocalMonthlyStat {
   totalHours: number;
 }
 
-/** 통계 카드 — 전월 대비 증감 표시 및 모노크롬 디자인 */
+/* 통계 카드 - 모던 벤토 스타일 */
 export function StatsCards({ summary, month, isLoading }: StatsCardsProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} className="border border-border bg-white shadow-none">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <Skeleton className="h-4 w-[100px]" />
-              <Skeleton className="h-4 w-4 rounded-full" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-8 w-[120px] mb-2" />
-              <Skeleton className="h-3 w-[80px]" />
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+        {/* 메인 순수익 스켈레톤 */}
+        <div className="md:col-span-6 h-[200px] rounded-3xl bg-white shadow-sm border border-slate-100 p-6 flex flex-col justify-between">
+          <Skeleton className="h-6 w-[120px]" />
+          <div>
+            <Skeleton className="h-12 w-[180px] mb-3" />
+            <Skeleton className="h-4 w-[100px]" />
+          </div>
+        </div>
+        {/* 서브 스켈레톤 3개 */}
+        <div className="md:col-span-6 grid grid-rows-3 gap-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl bg-white shadow-sm border border-slate-100 p-4 flex items-center justify-between"
+            >
+              <Skeleton className="h-4 w-[80px]" />
+              <Skeleton className="h-6 w-[100px]" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -63,114 +70,148 @@ export function StatsCards({ summary, month, isLoading }: StatsCardsProps) {
 
   const monthLabel = month ? `${month}월` : "이번 달";
 
-  interface CardItem {
-    title: string;
-    value: number;
-    diff: number;
-    icon: LucideIcon;
-    prefix: string;
-    suffix?: string;
-    valueClassName?: string;
-  }
+  const getDiffDisplay = (diffValue: number) => {
+    if (diffValue > 0)
+      return {
+        isPositive: true,
+        isZero: false,
+        color: "text-emerald-600",
+        icon: <ArrowCircleUpRight className="mr-1 h-3.5 w-3.5" />,
+        val: `+${diffValue.toFixed(1)}%`,
+      };
+    if (diffValue < 0)
+      return {
+        isPositive: false,
+        isZero: false,
+        color: "text-rose-600",
+        icon: <ArrowCircleDownRight className="mr-1 h-3.5 w-3.5" />,
+        val: `${diffValue.toFixed(1)}%`,
+      };
+    return {
+      isPositive: false,
+      isZero: true,
+      color: "text-slate-400",
+      icon: <Minus className="mr-1 h-3.5 w-3.5" />,
+      val: "0.0%",
+    };
+  };
 
-  const cards: CardItem[] = [
-    {
-      title: `${monthLabel} 순수익`,
-      value: current.netProfit,
-      diff: diff.netProfit,
-      icon: BarChart3,
-      prefix: current.netProfit >= 0 ? "+" : "",
-      valueClassName: "text-blue-600", // 순수익: 신뢰의 블루
-    },
-    {
-      title: `${monthLabel} 총 수익`,
-      value: current.revenue,
-      diff: diff.revenue,
-      icon: TrendingUp,
-      prefix: "+",
-      valueClassName: "text-emerald-600", // 수익: 긍정의 에메랄드
-    },
-    {
-      title: `${monthLabel} 총 지출`,
-      value: current.expense,
-      diff: diff.expense,
-      icon: TrendingDown,
-      prefix: "-",
-      valueClassName: "text-rose-600", // 지출: 경고의 로즈
-    },
-    {
-      title: `${monthLabel} 투입 시간`,
-      value: current.totalHours,
-      diff: diff.totalHours,
-      icon: Clock,
-      prefix: "",
-      suffix: "시간",
-      valueClassName: "text-foreground",
-    },
-  ];
+  const netDiff = getDiffDisplay(diff.netProfit);
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {cards.map((card, index) => {
-        const diffValue = card.diff ?? 0;
-        const isPositive = diffValue > 0;
-        const isNegative = diffValue < 0;
-        const isZero = diffValue === 0;
+    <div className="grid grid-cols-1 md:grid-cols-12 gap-5 lg:gap-6">
+      {/* 1. Primary Card: 순수익 (가장 크게 강조) */}
+      <motion.div
+        className="md:col-span-6 lg:col-span-7"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <Card className="h-full min-h-[220px] relative overflow-hidden bg-slate-700 border-none shadow-md rounded-2xl group">
+          <CardContent className="h-full p-8 flex flex-col justify-between relative z-10">
+            <div className="flex items-center gap-2 mb-8">
+              <div className="p-2 bg-slate-600 rounded-xl border border-slate-500/50">
+                <Coins className="h-5 w-5 text-slate-200" />
+              </div>
+              <span className="font-semibold text-slate-200 tracking-wide text-sm">
+                {monthLabel} 순수익
+              </span>
+            </div>
 
-        return (
+            <div>
+              <div className="text-3xl lg:text-4xl font-bold tracking-tight mb-3 text-white">
+                {current.netProfit >= 0 ? "+" : ""}
+                {current.netProfit.toLocaleString()}
+                <span className="text-xl lg:text-2xl font-semibold ml-1 text-slate-300">
+                  원
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div
+                  className={`flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${netDiff.isPositive ? "bg-slate-600 text-emerald-400" : netDiff.isZero ? "bg-slate-600 text-slate-300" : "bg-slate-600 text-rose-400"}`}
+                >
+                  {netDiff.icon}
+                  {netDiff.val}
+                </div>
+                <span className="text-sm font-medium text-slate-300">
+                  지난달 대비
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* 2. Secondary Cards: 우측 혹은 하단에 위젯 리스트 형태 */}
+      <div className="md:col-span-6 lg:col-span-5 grid grid-rows-3 gap-4">
+        {[
+          {
+            title: "매출",
+            value: current.revenue,
+            diffStruct: getDiffDisplay(diff.revenue),
+            icon: Wallet,
+            iconColor: "text-slate-500",
+            iconBg: "bg-slate-100",
+            prefix: "+",
+          },
+          {
+            title: "지출",
+            value: current.expense,
+            diffStruct: getDiffDisplay(diff.expense),
+            icon: CreditCard,
+            iconColor: "text-slate-500",
+            iconBg: "bg-slate-100",
+            prefix: "-",
+          },
+          {
+            title: "투입 시간",
+            value: current.totalHours,
+            diffStruct: getDiffDisplay(diff.totalHours),
+            icon: Clock,
+            iconColor: "text-slate-500",
+            iconBg: "bg-slate-100",
+            suffix: "h",
+            prefix: "",
+          },
+        ].map((card, idx) => (
           <motion.div
             key={card.title}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              delay: index * 0.08,
-              duration: 0.4,
-              ease: "easeOut",
-            }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 + idx * 0.1, duration: 0.4 }}
+            className="bg-white rounded-2xl p-4 lg:p-5 border border-slate-200 shadow-sm flex flex-wrap gap-x-2 gap-y-1 items-center justify-between group hover:border-slate-300 transition-all duration-300"
           >
-            <Card className="border border-border bg-white shadow-none">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4 md:p-6">
-                <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+            <div className="flex items-center gap-3 lg:gap-4 min-w-[120px]">
+              <div
+                className={`p-2 sm:p-2.5 rounded-xl border border-slate-200/50 ${card.iconBg} ${card.iconColor} group-hover:scale-110 transition-transform duration-300 shrink-0`}
+              >
+                <card.icon className="w-5 h-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-semibold text-slate-500">
                   {card.title}
-                </CardTitle>
-                <card.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="p-4 pt-0 md:p-6 md:pt-0">
-                <div
-                  className={`text-lg md:text-2xl font-bold ${card.valueClassName || "text-foreground"} truncate`}
-                >
-                  {card.prefix}
-                  {card.value.toLocaleString()}
-                  {card.suffix ? card.suffix : "원"}
-                </div>
-                <div className="flex items-center mt-1 text-xs">
-                  {isPositive && (
-                    <span className="flex items-center text-foreground font-medium">
-                      <ArrowUpRight className="mr-1 h-3 w-3" />
-                      {diffValue.toFixed(1)}%
-                    </span>
-                  )}
-                  {isNegative && (
-                    <span className="flex items-center text-muted-foreground font-medium">
-                      <ArrowDownRight className="mr-1 h-3 w-3" />
-                      {Math.abs(diffValue).toFixed(1)}%
-                    </span>
-                  )}
-                  {isZero && (
-                    <span className="flex items-center text-muted-foreground font-medium">
-                      <Minus className="mr-1 h-3 w-3" />
-                      0.0%
-                    </span>
-                  )}
-                  <span className="ml-1.5 text-muted-foreground/60">
-                    지난달 대비
+                </span>
+                <div className="flex items-center mt-0.5">
+                  <span
+                    className={`flex items-center text-[11px] font-bold ${card.diffStruct.color}`}
+                  >
+                    {card.diffStruct.icon}
+                    {card.diffStruct.val}
                   </span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
+
+            <div className="text-xl font-bold text-slate-800 tabular-nums text-right tracking-tight">
+              {card.prefix}
+              {card.value.toLocaleString()}
+              <span className="text-[13px] text-slate-400 font-medium ml-1">
+                {card.suffix || "원"}
+              </span>
+            </div>
           </motion.div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }

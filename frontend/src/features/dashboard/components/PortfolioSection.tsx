@@ -6,7 +6,6 @@ import ReactApexChart from "react-apexcharts";
 import type { ApexOptions } from "apexcharts";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-
 import {
   ChartFilterControl,
   type ChartFilterType,
@@ -17,8 +16,8 @@ interface PortfolioSectionProps {
   data: SourcePerformance[];
   className?: string;
   selectedType: ChartFilterType;
-  dateRange?: DateRange;
-  onFilterChange: (type: ChartFilterType, range?: DateRange) => void;
+  dateRange: DateRange | undefined;
+  onFilterChange: (type: ChartFilterType, dateRange?: DateRange) => void;
 }
 
 type TabType = "revenue" | "netProfit" | "expense";
@@ -66,15 +65,15 @@ export function PortfolioSection({
   const chartSeries = chartData.map((d) => getSeriesValue(d, activeTab));
   const chartLabels = chartData.map((d) => d.name);
 
-  // 차트 컬러 팔레트 (파스텔 톤)
+  // 차트 가독성을 위해 단정하되 구분이 명확한(Muted but Distinct) 계열의 색상 배합
   const chartColors = [
-    "#60a5fa", // Blue
-    "#34d399", // Emerald
-    "#fb7185", // Rose
-    "#a78bfa", // Violet
-    "#fbbf24", // Amber
-    "#2dd4bf", // Teal
-    "#f472b6", // Pink
+    "#6366f1", // Indigo 500
+    "#10b981", // Emerald 500
+    "#f59e0b", // Amber 500
+    "#f43f5e", // Rose 500
+    "#8b5cf6", // Violet 500
+    "#06b6d4", // Cyan 500
+    "#64748b", // Slate 500
   ];
 
   const chartOptions: ApexOptions = {
@@ -82,29 +81,39 @@ export function PortfolioSection({
       type: "donut",
       fontFamily: "Pretendard Variable, sans-serif",
       background: "transparent",
-      animations: { enabled: true },
+      animations: {
+        enabled: true,
+        speed: 800,
+        dynamicAnimation: { speed: 350 },
+      },
     },
     colors: chartColors.slice(0, Math.max(chartData.length, 1)),
     labels: chartLabels,
     plotOptions: {
       pie: {
         donut: {
-          size: "65%",
+          size: "72%",
           labels: {
             show: true,
-            name: { show: true, fontSize: "12px", color: "#a3a3a3" },
+            name: {
+              show: true,
+              fontSize: "12px",
+              color: "#64748b",
+              fontWeight: 500,
+            },
             value: {
               show: true,
-              fontSize: "18px",
-              fontWeight: 700,
-              color: "#171717",
+              fontSize: "24px",
+              fontWeight: 800,
+              color: "#0f172a",
               formatter: (val) => `${Number(val).toLocaleString()}`,
             },
             total: {
               show: true,
               label: "합계",
-              fontSize: "12px",
-              color: "#a3a3a3",
+              fontSize: "13px",
+              color: "#64748b",
+              fontWeight: 600,
               formatter: (w) => {
                 const total = w.globals.seriesTotals.reduce(
                   (a: number, b: number) => a + b,
@@ -117,13 +126,13 @@ export function PortfolioSection({
         },
       },
     },
-    stroke: { width: 2, colors: ["#ffffff"] },
+    stroke: { width: 0 },
     legend: { show: false },
     dataLabels: { enabled: false },
     tooltip: {
-      y: {
-        formatter: (val: number) => `${val.toLocaleString()}원`,
-      },
+      theme: "light",
+      style: { fontSize: "12px" },
+      y: { formatter: (val: number) => `${val.toLocaleString()}원` },
     },
   };
 
@@ -135,44 +144,65 @@ export function PortfolioSection({
 
   return (
     <Card
-      className={cn("border border-border bg-white shadow-none", className)}
+      className={cn(
+        "border border-slate-200 bg-white shadow-sm h-full flex flex-col rounded-2xl overflow-hidden",
+        className,
+      )}
     >
-      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4">
-        <div className="space-y-1">
-          <CardTitle className="text-base font-semibold">
-            나의 수입 파이프라인
-          </CardTitle>
-          <p className="text-xs text-muted-foreground">
-            내 수입이 어디서 나오는지 한눈에 확인하세요.
-          </p>
+      <CardHeader className="flex flex-col gap-4 pb-4 pt-6 px-6 relative z-10 w-full">
+        <div className="flex flex-wrap items-start justify-between gap-4 w-full">
+          <div className="space-y-1.5 min-w-[200px]">
+            <CardTitle className="text-lg font-bold tracking-tight text-slate-800">
+              수입 파이프라인
+            </CardTitle>
+            <p className="text-[13px] text-slate-500 font-medium tracking-wide">
+              수익의 출처와 비율을 분석합니다.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto min-w-0 max-w-full">
+            <ChartFilterControl
+              selectedType={selectedType}
+              dateRange={dateRange}
+              onFilterChange={onFilterChange}
+              className="min-w-0 max-w-full"
+            />
+          </div>
         </div>
+
         <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as TabType)}
+          className="w-full"
         >
-          <TabsList className="h-8">
-            <TabsTrigger value="revenue" className="text-xs h-6 px-2">
-              총 수익
+          <TabsList className="h-9 w-full bg-slate-100/80 p-0.5 rounded-xl grid grid-cols-3">
+            <TabsTrigger
+              value="revenue"
+              className="text-xs h-8 rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              총수익
             </TabsTrigger>
-            <TabsTrigger value="netProfit" className="text-xs h-6 px-2">
+            <TabsTrigger
+              value="netProfit"
+              className="text-xs h-8 rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
               순수익
             </TabsTrigger>
-            <TabsTrigger value="expense" className="text-xs h-6 px-2">
+            <TabsTrigger
+              value="expense"
+              className="text-xs h-8 rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
               지출
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </CardHeader>
-      <div className="px-4 md:px-6 pb-2 flex justify-end">
-        <ChartFilterControl
-          selectedType={selectedType}
-          dateRange={dateRange}
-          onFilterChange={onFilterChange}
-        />
-      </div>
-      <CardContent>
-        <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-          <div className="shrink-0 relative w-[160px] h-[160px] md:w-[240px] md:h-[240px] mx-auto md:mx-0">
+
+      <CardContent className="flex-1 p-0 relative">
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-50/50 to-transparent pointer-events-none" />
+
+        <div className="flex flex-col h-full px-6 pb-6 pt-2 relative z-10">
+          <div className="shrink-0 relative w-[200px] h-[200px] mx-auto mb-6">
             {chartData.length > 0 ? (
               <ReactApexChart
                 options={chartOptions}
@@ -182,16 +212,16 @@ export function PortfolioSection({
                 width="100%"
               />
             ) : (
-              <div className="flex items-center justify-center w-full h-full text-sm text-muted-foreground bg-neutral-50 rounded-full">
+              <div className="flex items-center justify-center w-full h-full text-sm font-medium text-slate-400 bg-slate-50 rounded-full border border-dashed border-slate-200">
                 데이터 없음
               </div>
             )}
           </div>
 
-          <div className="flex-1 w-full space-y-3 min-w-0">
+          <div className="flex-1 space-y-4 overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
             {sortedData.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                데이터가 없습니다.
+              <p className="text-sm text-center font-medium text-slate-400 py-4">
+                기록된 데이터가 없습니다.
               </p>
             )}
             {sortedData.map((item, index) => {
@@ -207,29 +237,29 @@ export function PortfolioSection({
                   transition={{ delay: index * 0.05 }}
                   className="group"
                 >
-                  <div className="flex justify-between items-center text-sm mb-1">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-start gap-2.5 min-w-0 pt-0.5">
                       <div
-                        className="w-2 h-2 rounded-full shrink-0"
+                        className="w-2.5 h-2.5 rounded-[3px] shrink-0 mt-[4px]"
                         style={{
                           backgroundColor:
                             chartColors[index % chartColors.length],
                         }}
                       />
-                      <span className="font-medium text-foreground truncate">
+                      <span className="font-bold text-slate-700 text-[13px] leading-relaxed break-keep">
                         {item.name}
                       </span>
                     </div>
-                    <div className="flex gap-2 text-xs">
-                      <span className="font-semibold text-foreground">
+                    <div className="flex flex-col items-end shrink-0">
+                      <span className="font-bold tracking-tight text-slate-800 text-[13px]">
                         {val.toLocaleString()}원
                       </span>
-                      <span className="text-muted-foreground w-8 text-right text-[11px] pt-0.5">
+                      <span className="text-slate-400 text-[12px] font-semibold mt-0.5">
                         {percent.toFixed(1)}%
                       </span>
                     </div>
                   </div>
-                  <div className="h-1.5 w-full bg-neutral-100 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                     <motion.div
                       className="h-full rounded-full"
                       style={{
@@ -238,7 +268,11 @@ export function PortfolioSection({
                       }}
                       initial={{ width: 0 }}
                       animate={{ width: `${barWidth}%` }}
-                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      transition={{
+                        duration: 0.7,
+                        ease: "easeOut",
+                        delay: 0.2,
+                      }}
                     />
                   </div>
                 </motion.div>

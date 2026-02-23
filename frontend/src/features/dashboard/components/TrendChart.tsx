@@ -20,7 +20,11 @@ export function TrendChart({
   className,
   minimal = false,
 }: TrendChartProps) {
-  const categories = data.map((d) => `${d.month}`);
+  const categories = data.map((d) =>
+    d.month.length === 7
+      ? d.month.substring(2).replace("-", ".")
+      : `${d.month}`,
+  );
 
   const options: ApexOptions = {
     chart: {
@@ -30,26 +34,42 @@ export function TrendChart({
       zoom: { enabled: false }, // 마우스 스크롤 줌 비활성화
       fontFamily: "Pretendard Variable, sans-serif",
       background: "transparent",
+      animations: {
+        enabled: true,
+        speed: 800,
+      },
     },
-    // 수익: Soft Blue, 지출: Soft Rose, 순수익: Soft Emerald
-    colors: ["#60a5fa", "#fb7185", "#34d399"],
+    // 수익(막대) / 지출(막대) / 순수익(라인)
+    // 차트 가독성을 위해 구분이 확실하지만 톤다운된 색상(Muted but Distinct) 적용
+    colors: ["#34d399", "#fb7185", "#6366f1"],
 
     plotOptions: {
       bar: {
-        columnWidth: "50%",
+        columnWidth: "40%",
         borderRadius: 4,
         borderRadiusApplication: "end",
       },
     },
     stroke: {
-      width: [0, 0, 3], // Thicker line
+      width: [0, 0, 4], // Thicker line for Net Profit
       curve: "smooth",
+    },
+    fill: {
+      opacity: [0.85, 0.85, 1],
+      gradient: {
+        inverseColors: false,
+        shade: "light",
+        type: "vertical",
+        opacityFrom: 0.9,
+        opacityTo: 0.7,
+        stops: [0, 100],
+      },
     },
     markers: {
       size: 5,
       colors: ["#fff"],
-      strokeColors: "#34d399",
-      strokeWidth: 2,
+      strokeColors: "#475569",
+      strokeWidth: 3,
       hover: {
         size: 7,
       },
@@ -57,20 +77,24 @@ export function TrendChart({
     xaxis: {
       categories,
       labels: {
-        style: { colors: "#a3a3a3", fontSize: "12px" },
+        style: { colors: "#64748b", fontSize: "12px", fontWeight: 500 },
+        rotate: -45,
+        hideOverlappingLabels: true,
       },
       axisBorder: { show: false },
       axisTicks: { show: false },
     },
     yaxis: {
       labels: {
-        style: { colors: "#a3a3a3", fontSize: "12px" },
+        style: { colors: "#64748b", fontSize: "12px", fontWeight: 500 },
         formatter: (val: number) => val.toLocaleString(),
       },
     },
     grid: {
-      borderColor: "#f5f5f5",
+      borderColor: "#f1f5f9",
       strokeDashArray: 4,
+      xaxis: { lines: { show: false } },
+      yaxis: { lines: { show: true } },
     },
     tooltip: {
       y: {
@@ -83,11 +107,27 @@ export function TrendChart({
       position: "top",
       horizontalAlign: "right",
       fontSize: "13px",
-      labels: { colors: "#737373" },
-      markers: { size: 6, shape: "circle" as const },
-      itemMargin: { horizontal: 12 },
+      fontWeight: 500,
+      labels: { colors: "#475569" },
+      markers: { size: 7, shape: "circle" as const },
+      itemMargin: { horizontal: 16 },
     },
     dataLabels: { enabled: false },
+    responsive: [
+      {
+        breakpoint: 768,
+        options: {
+          xaxis: {
+            labels: {
+              style: { fontSize: "10px" },
+              rotate: -45,
+              rotateAlways: true,
+              hideOverlappingLabels: true,
+            },
+          },
+        },
+      },
+    ],
   };
 
   const series = [
@@ -98,12 +138,12 @@ export function TrendChart({
 
   if (minimal) {
     return (
-      <div className={className}>
+      <div className={cn("w-full h-full", className)}>
         <ReactApexChart
           options={options}
           series={series}
           type="line"
-          height={340}
+          height="100%"
         />
       </div>
     );
@@ -111,22 +151,25 @@ export function TrendChart({
 
   return (
     <Card
-      className={cn("border border-border bg-white shadow-none", className)}
+      className={cn(
+        "border border-slate-200 bg-white shadow-sm rounded-2xl overflow-hidden",
+        className,
+      )}
     >
-      <CardHeader>
-        <CardTitle className="text-base font-semibold">
+      <CardHeader className="pt-6 px-6 pb-2">
+        <CardTitle className="text-lg font-bold tracking-tight text-slate-800">
           월별 수익 추이
         </CardTitle>
-        <p className="text-xs text-muted-foreground">
-          수익/지출 막대와 순수익(라인) 흐름을 확인하세요.
+        <p className="text-[13px] text-slate-500 font-medium tracking-wide">
+          수익, 지출 규모와 순수익 흐름을 확인하세요.
         </p>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0 px-2 pb-2">
         <ReactApexChart
           options={options}
           series={series}
           type="line"
-          height={340}
+          height={360}
         />
       </CardContent>
     </Card>

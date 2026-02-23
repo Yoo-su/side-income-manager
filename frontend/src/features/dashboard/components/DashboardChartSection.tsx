@@ -8,18 +8,26 @@ import ReactApexChart from "react-apexcharts";
 import type { ApexOptions } from "apexcharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import {
+  ChartFilterControl,
+  type ChartFilterType,
+} from "@/features/common/components/ChartFilterControl";
+import type { DateRange } from "react-day-picker";
 
 import type { MonthlyStat, SourcePerformance } from "../types";
 
 interface DashboardChartSectionProps {
   className?: string;
-  trendData?: MonthlyStat[]; // any[] 타입에서 구체적 타입으로 업데이트
+  trendData?: MonthlyStat[];
   isTrendLoading: boolean;
   rankingData?: SourcePerformance[];
   isRankingLoading?: boolean;
   startDate?: string;
   endDate?: string;
   limit?: number;
+  filterType: ChartFilterType;
+  dateRange?: DateRange;
+  onFilterChange: (type: ChartFilterType, range?: DateRange) => void;
 }
 
 type ViewMode = "total" | "comparison";
@@ -36,6 +44,9 @@ export function DashboardChartSection({
   startDate,
   endDate,
   limit,
+  filterType,
+  dateRange,
+  onFilterChange,
 }: DashboardChartSectionProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("total");
 
@@ -58,7 +69,13 @@ export function DashboardChartSection({
         if (!acc[curr.sourceName]) {
           acc[curr.sourceName] = [];
         }
-        acc[curr.sourceName].push({ x: curr.month, y: curr.revenue });
+        acc[curr.sourceName].push({
+          x:
+            curr.month.length === 7
+              ? curr.month.substring(2).replace("-", ".")
+              : curr.month,
+          y: curr.revenue,
+        });
         return acc;
       },
       {} as Record<string, { x: string; y: number }[]>,
@@ -82,11 +99,11 @@ export function DashboardChartSection({
       zoom: { enabled: false },
     },
     colors: [
-      "#60a5fa", // Blue
-      "#34d399", // Emerald
-      "#fb7185", // Rose
-      "#a78bfa", // Violet
-      "#fbbf24", // Amber
+      "#6366f1", // Indigo 500
+      "#10b981", // Emerald 500
+      "#f59e0b", // Amber 500
+      "#f43f5e", // Rose 500
+      "#06b6d4", // Cyan 500
     ],
     stroke: {
       width: 3,
@@ -96,6 +113,8 @@ export function DashboardChartSection({
       type: "category",
       labels: {
         style: { colors: "#a3a3a3", fontSize: "12px" },
+        rotate: -45,
+        hideOverlappingLabels: true,
       },
       axisBorder: { show: false },
       axisTicks: { show: false },
@@ -128,7 +147,7 @@ export function DashboardChartSection({
             labels: {
               style: { fontSize: "10px" },
               rotate: -45,
-              rotateAlways: false,
+              rotateAlways: true,
               hideOverlappingLabels: true,
             },
           },
@@ -140,62 +159,87 @@ export function DashboardChartSection({
 
   return (
     <Card
-      className={cn("border border-border bg-white shadow-none", className)}
+      className={cn(
+        "border border-slate-200 bg-white shadow-sm h-full flex flex-col rounded-2xl overflow-hidden",
+        className,
+      )}
     >
-      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-4 space-y-0">
-        <div className="space-y-1">
-          <CardTitle className="text-base font-semibold">
-            수익 성장 그래프
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">
-            {viewMode === "total"
-              ? "내 수입이 어떻게 성장하고 있는지 확인해보세요."
-              : "주요 프로젝트들의 성과 변화를 비교해봅니다."}
-          </p>
-        </div>
-        <Tabs
-          value={viewMode}
-          onValueChange={(v) => setViewMode(v as ViewMode)}
-        >
-          <TabsList className="h-8">
-            <TabsTrigger value="total" className="text-xs h-6 px-2">
-              전체 흐름
-            </TabsTrigger>
-            <TabsTrigger value="comparison" className="text-xs h-6 px-2">
-              수입원별 비교
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </CardHeader>
-      <CardContent>
-        {viewMode === "total" ? (
-          // 전체 흐름 (TrendChart)
-          isTrendLoading ? (
-            <Skeleton className="h-[250px] md:h-[350px] w-full" />
-          ) : (
-            <div className="-mt-4">
-              <TrendChart data={trendData || []} minimal />
-            </div>
-          )
-        ) : // 수입원별 비교 (Comparison)
-        isComparisonLoading ? (
-          <Skeleton className="h-[250px] md:h-[350px] w-full" />
-        ) : (
-          <div className="h-[250px] md:h-[340px] w-full">
-            {comparisonSeries.length > 0 ? (
-              <ReactApexChart
-                options={comparisonOptions}
-                series={comparisonSeries}
-                type="line"
-                height={340}
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-                비교할 데이터가 충분하지 않습니다.
-              </div>
-            )}
+      <CardHeader className="flex flex-col gap-4 pb-4 pt-6 px-6 relative z-10 w-full">
+        <div className="flex flex-wrap items-start justify-between gap-4 w-full">
+          <div className="space-y-1.5 min-w-[200px]">
+            <CardTitle className="text-lg font-bold tracking-tight text-slate-800">
+              수익 성장 그래프
+            </CardTitle>
+            <p className="text-[13px] text-slate-500 font-medium tracking-wide">
+              {viewMode === "total"
+                ? "내 수입이 어떻게 성장하고 있는지 확인해보세요."
+                : "주요 프로젝트들의 성과 변화를 비교해봅니다."}
+            </p>
           </div>
-        )}
+
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto min-w-0 max-w-full">
+            <ChartFilterControl
+              selectedType={filterType}
+              dateRange={dateRange}
+              onFilterChange={onFilterChange}
+              className="min-w-0 max-w-full"
+            />
+            <Tabs
+              value={viewMode}
+              onValueChange={(v) => setViewMode(v as ViewMode)}
+              className="w-full sm:w-auto min-w-0"
+            >
+              <TabsList className="h-9 w-full bg-slate-100/80 p-0.5 rounded-xl">
+                <TabsTrigger
+                  value="total"
+                  className="text-xs h-8 px-4 rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                >
+                  전체 흐름
+                </TabsTrigger>
+                <TabsTrigger
+                  value="comparison"
+                  className="text-xs h-8 px-4 rounded-lg font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm"
+                >
+                  항목별 비교
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex-1 p-0 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-50/50 pointer-events-none" />
+        <div className="px-6 pb-6 h-full relative z-10">
+          {viewMode === "total" ? (
+            // 전체 흐름 (TrendChart)
+            isTrendLoading ? (
+              <Skeleton className="h-[250px] md:h-[350px] w-full" />
+            ) : (
+              <div className="mt-4 h-[280px] md:h-[380px] w-full">
+                <TrendChart data={trendData || []} minimal />
+              </div>
+            )
+          ) : // 수입원별 비교 (Comparison)
+          isComparisonLoading ? (
+            <Skeleton className="h-[300px] md:h-[400px] w-full rounded-2xl mx-6 mt-4 opacity-50" />
+          ) : (
+            <div className="h-[280px] md:h-[380px] w-full pt-4">
+              {comparisonSeries.length > 0 ? (
+                <ReactApexChart
+                  options={comparisonOptions}
+                  series={comparisonSeries}
+                  type="line"
+                  height={340}
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+                  비교할 데이터가 충분하지 않습니다.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

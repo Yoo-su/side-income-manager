@@ -10,16 +10,28 @@ import {
   ParseUUIDPipe,
   ParseIntPipe,
   DefaultValuePipe,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiQuery, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiResponse,
+  ApiQuery,
+  ApiOperation,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TransactionService } from './transaction.service';
 import {
   CreateTransactionDto,
   UpdateTransactionDto,
 } from './dto/create-transaction.dto';
 import { Transaction } from './entities/transaction.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '../user/entities/user.entity';
 
 @ApiTags('Transactions')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('transactions')
 export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
@@ -31,8 +43,11 @@ export class TransactionController {
     description: '거래 내역이 생성되었습니다.',
     type: Transaction,
   })
-  create(@Body() createTransactionDto: CreateTransactionDto) {
-    return this.transactionService.create(createTransactionDto);
+  create(
+    @Body() createTransactionDto: CreateTransactionDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.transactionService.create(createTransactionDto, user.id);
   }
 
   @Get()
@@ -60,14 +75,20 @@ export class TransactionController {
     type: Number,
   })
   findAll(
+    @CurrentUser() user: User,
     @Query('sourceId') sourceId?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number = 20,
   ) {
     if (sourceId) {
-      return this.transactionService.findAllBySourceId(sourceId, page, limit);
+      return this.transactionService.findAllBySourceId(
+        sourceId,
+        page,
+        limit,
+        user.id,
+      );
     }
-    return this.transactionService.findAll(page, limit);
+    return this.transactionService.findAll(page, limit, user.id);
   }
 
   @Get(':id')
@@ -78,8 +99,8 @@ export class TransactionController {
     type: Transaction,
   })
   @ApiResponse({ status: 404, description: '거래 내역을 찾을 수 없습니다.' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.transactionService.findOne(id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.transactionService.findOne(id, user.id);
   }
 
   @Patch(':id')
@@ -92,14 +113,15 @@ export class TransactionController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateTransactionDto: UpdateTransactionDto,
+    @CurrentUser() user: User,
   ) {
-    return this.transactionService.update(id, updateTransactionDto);
+    return this.transactionService.update(id, updateTransactionDto, user.id);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: '거래 내역 삭제' })
   @ApiResponse({ status: 200, description: '거래 내역이 삭제되었습니다.' })
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.transactionService.remove(id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.transactionService.remove(id, user.id);
   }
 }

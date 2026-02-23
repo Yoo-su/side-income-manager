@@ -7,7 +7,7 @@ import {
   isSameMonth,
 } from "date-fns";
 import { ko } from "date-fns/locale";
-import { Calendar as CalendarIcon, Check } from "lucide-react";
+import { Calendar as CalendarIcon, Check } from "@phosphor-icons/react";
 import type { DateRange } from "react-day-picker";
 import { useState } from "react";
 
@@ -138,7 +138,7 @@ export function DateRangePicker({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-[260px] justify-start text-left font-normal transition-all hover:bg-accent/50",
+              "w-full sm:w-[260px] justify-start text-left font-normal transition-all hover:bg-accent/50",
               !date && "text-muted-foreground",
             )}
           >

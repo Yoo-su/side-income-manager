@@ -7,6 +7,8 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { DashboardModule } from './features/dashboard/dashboard.module';
+import { UserModule } from './features/user/user.module';
+import { AuthModule } from './features/auth/auth.module';
 
 @Module({
   imports: [
@@ -15,8 +17,10 @@ import { DashboardModule } from './features/dashboard/dashboard.module';
       type: 'postgres',
       url: process.env.DATABASE_URL,
       autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV === 'development',
+      synchronize: process.env.NODE_ENV !== 'production',
     }),
+    UserModule,
+    AuthModule,
     IncomeSourceModule,
     TransactionModule,
     DashboardModule,

@@ -31,13 +31,8 @@ export function ChartFilterControl({
   };
 
   return (
-    <div
-      className={cn(
-        "flex items-center gap-1.5 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
-        className,
-      )}
-    >
-      <div className="flex items-center space-x-1 rounded-md border bg-white p-1">
+    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+      <div className="flex flex-wrap items-center gap-1 rounded-md border bg-white p-1 shrink-0">
         {(["3m", "6m", "1y", "3y"] as ChartFilterType[]).map((type) => (
           <Button
             key={type}
@@ -57,12 +52,11 @@ export function ChartFilterControl({
           </Button>
         ))}
       </div>
-      <div className="h-6 w-px bg-border mx-1" />
       <DateRangePicker
         date={dateRange}
         onDateChange={handleRangeChange}
         className={cn(
-          "transition-opacity duration-200",
+          "transition-opacity duration-200 min-w-0 max-w-full shrink",
           selectedType === "custom" ? "opacity-100" : "opacity-70",
         )}
       />

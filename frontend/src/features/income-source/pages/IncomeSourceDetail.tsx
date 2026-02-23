@@ -11,7 +11,7 @@ import {
   useDeleteTransaction,
 } from "../../transaction/hooks/useTransactions";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Spinner } from "@phosphor-icons/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -164,7 +164,7 @@ export function IncomeSourceDetail() {
   if (isSourceLoading || isTxLoading || isSummaryLoading) {
     return (
       <div className="flex h-full items-center justify-center py-32">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Spinner className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -287,7 +287,7 @@ export function IncomeSourceDetail() {
 
   return (
     <PageTransition>
-      <div className="space-y-8 p-4 md:p-6 lg:p-10 max-w-5xl">
+      <div className="space-y-8 p-4 md:p-6 lg:p-10 w-full">
         {/* 뒤로 가기 */}
         <Button
           variant="ghost"
@@ -301,11 +301,11 @@ export function IncomeSourceDetail() {
         {/* 헤더 */}
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-800">
               {incomeSource.name}
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              <span className="inline-block rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-600 mr-2">
+            <p className="mt-1 text-sm text-slate-500 font-medium">
+              <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600 mr-2">
                 {IncomeSourceTypeLabel[incomeSource.type]}
               </span>
               {incomeSource.description}
@@ -313,7 +313,7 @@ export function IncomeSourceDetail() {
           </div>
           <Button
             onClick={handleAddClick}
-            className="bg-foreground text-background hover:bg-foreground/90 rounded-full px-5 text-sm self-start"
+            className="bg-slate-900 text-white hover:bg-slate-800 rounded-xl px-5 py-5 text-sm self-start font-semibold transition-colors"
           >
             <Plus className="mr-1.5 h-4 w-4" />
             기록 추가
@@ -323,7 +323,7 @@ export function IncomeSourceDetail() {
         {/* 상단: 요약 카드 + 미니 차트 */}
         <div className="grid grid-cols-1 gap-6">
           {/* 분석 지표 카드 (5칸 그리드) */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
             {summaryCards.map((card, index) => (
               <motion.div
                 key={card.title}
@@ -336,28 +336,28 @@ export function IncomeSourceDetail() {
                 }}
                 className="h-full min-w-0"
               >
-                <Card className="border border-border bg-white shadow-none h-full flex flex-col justify-center px-1 md:px-0 min-w-0">
-                  <CardHeader className="pb-1 pt-2 md:pt-4 text-center px-1 min-w-0">
-                    <CardTitle className="text-[10px] md:text-xs font-medium text-muted-foreground truncate">
+                <Card className="border border-slate-200 bg-white shadow-sm rounded-2xl h-full flex flex-col justify-center px-2 py-4 md:px-4 min-w-0">
+                  <CardHeader className="p-0 pb-2 text-center min-w-0">
+                    <CardTitle className="text-[11px] md:text-sm font-semibold text-slate-500 truncate">
                       {card.title}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="text-center pb-2 md:pb-4 pt-0 px-1 min-w-0">
+                  <CardContent className="text-center p-0 min-w-0">
                     <div
                       className={cn(
-                        "text-sm md:text-lg lg:text-xl font-bold tracking-tight truncate",
+                        "text-[15px] sm:text-lg lg:text-xl font-bold tracking-tight break-keep",
                         card.className // 지정된 색상이 있다면 사용
                           ? card.className
                           : card.emphasis
-                            ? "text-foreground"
-                            : "text-muted-foreground",
+                            ? "text-slate-800"
+                            : "text-slate-600",
                       )}
                     >
                       {card.prefix}
                       {card.format(card.value)}
                     </div>
                     {card.subtext && (
-                      <p className="mt-1 text-[9px] md:text-[10px] text-muted-foreground/60 truncate">
+                      <p className="mt-1 text-[10px] md:text-xs text-slate-400 font-medium truncate">
                         {card.subtext}
                       </p>
                     )}
@@ -367,10 +367,9 @@ export function IncomeSourceDetail() {
             ))}
           </div>
 
-          {/* 미니 차트 */}
           <div className="w-full space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-foreground">
+              <h3 className="text-lg font-bold tracking-tight text-slate-800">
                 월별 추이
               </h3>
               <ChartFilterControl
@@ -380,7 +379,7 @@ export function IncomeSourceDetail() {
               />
             </div>
             {isStatsLoading ? (
-              <Skeleton className="h-[300px] w-full rounded-xl" />
+              <Skeleton className="h-[300px] w-full rounded-2xl" />
             ) : (
               <MonthlyMiniChart data={monthlyStats || []} />
             )}
@@ -390,18 +389,18 @@ export function IncomeSourceDetail() {
         {/* 거래 내역 */}
         <div className="space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-lg font-semibold tracking-tight text-foreground">
+            <h2 className="text-lg font-bold tracking-tight text-slate-800">
               최근 거래 내역
             </h2>
-            {/* 필터 탭 */}
-            <div className="flex p-1 bg-neutral-100 rounded-lg">
+            {/* 필터 탭 (Segmented Control) */}
+            <div className="flex p-1 bg-slate-100/80 rounded-xl">
               <button
                 onClick={() => setFilter("ALL")}
                 className={cn(
-                  "px-3 py-1 text-xs font-medium rounded-md transition-all",
+                  "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all",
                   filter === "ALL"
-                    ? "bg-white text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-800",
                 )}
               >
                 전체
@@ -409,10 +408,10 @@ export function IncomeSourceDetail() {
               <button
                 onClick={() => setFilter(TransactionType.REVENUE)}
                 className={cn(
-                  "px-3 py-1 text-xs font-medium rounded-md transition-all",
+                  "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all",
                   filter === TransactionType.REVENUE
-                    ? "bg-white text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-800",
                 )}
               >
                 수익
@@ -420,10 +419,10 @@ export function IncomeSourceDetail() {
               <button
                 onClick={() => setFilter(TransactionType.EXPENSE)}
                 className={cn(
-                  "px-3 py-1 text-xs font-medium rounded-md transition-all",
+                  "px-4 py-1.5 text-xs font-semibold rounded-lg transition-all",
                   filter === TransactionType.EXPENSE
-                    ? "bg-white text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-800",
                 )}
               >
                 지출
@@ -440,7 +439,7 @@ export function IncomeSourceDetail() {
           {/* 무한 스크롤 하단 감지 영역 */}
           <div ref={ref} className="py-4 text-center">
             {isFetchingNextPage ? (
-              <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+              <Spinner className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
             ) : hasNextPage ? (
               <span className="text-xs text-muted-foreground">
                 스크롤하여 더 보기

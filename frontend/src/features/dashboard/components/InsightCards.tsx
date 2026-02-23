@@ -1,17 +1,17 @@
 import type { SourcePerformance } from "../types";
-import { Trophy, Zap, TrendingUp } from "lucide-react";
+import { Medal, Lightbulb } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface InsightCardsProps {
   data: SourcePerformance[];
 }
 
+/** 미니멀 위젯형 인사이트 카드 */
 export function InsightCards({ data }: InsightCardsProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="flex w-full items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 p-8 text-sm text-muted-foreground">
-        설정된 기간에 해당하는 데이터가 없습니다.
+      <div className="flex h-full min-h-[100px] w-full items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white/50 backdrop-blur-sm p-6 text-[13px] font-medium text-slate-400">
+        기록된 데이터가 부족합니다.
       </div>
     );
   }
@@ -22,13 +22,9 @@ export function InsightCards({ data }: InsightCardsProps) {
   const topEfficiency = [...data]
     .filter((d) => d.totalHours > 0)
     .sort((a, b) => b.hourlyRate - a.hourlyRate)[0];
-  // 3. 최고 수익률왕 (ROI 최대, 비용 > 0)
-  const topRoi = [...data]
-    .filter((d) => d.totalExpense > 0)
-    .sort((a, b) => b.roi - a.roi)[0];
 
   const item = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 15, opacity: 0 },
     show: { y: 0, opacity: 1 },
   };
 
@@ -40,119 +36,76 @@ export function InsightCards({ data }: InsightCardsProps) {
         hidden: { opacity: 0 },
         show: {
           opacity: 1,
-          transition: {
-            staggerChildren: 0.1,
-          },
+          transition: { staggerChildren: 0.1 },
         },
       }}
-      className="grid gap-4 grid-cols-1 md:grid-cols-3"
+      className="grid grid-cols-1 xl:grid-cols-2 gap-4 h-full"
     >
       {/* 1. 수익왕 (Revenue) */}
-      <motion.div variants={item}>
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4 md:p-6">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
+      <motion.div variants={item} className="h-full">
+        <div className="h-full flex flex-col justify-between bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:border-slate-300 transition-colors group relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5 transform translate-x-1/4 -translate-y-1/4 group-hover:scale-110 transition-transform duration-500">
+            <Medal className="w-24 h-24 text-slate-600" />
+          </div>
+          <div className="flex items-center gap-2.5 mb-2 relative z-10">
+            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+              <Medal className="h-4 w-4 text-slate-500" />
+            </div>
+            <span className="text-[13px] font-bold text-slate-500 tracking-wide">
               최고 수익
-            </CardTitle>
-            <Trophy className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent className="p-4 pt-1 md:p-6 md:pt-2">
+            </span>
+          </div>
+
+          <div className="mt-auto relative z-10 space-y-1">
             {topProfit ? (
               <>
-                <div className="text-xl font-bold text-foreground">
+                <div className="text-[15px] sm:text-[17px] font-bold text-slate-800 tracking-tight leading-snug break-keep">
                   {topProfit.name}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  순수익{" "}
-                  <span className="font-medium text-blue-600">
-                    {topProfit.netProfit.toLocaleString()}원
-                  </span>
-                </p>
-                <div className="mt-2 text-xs text-muted-foreground/80">
-                  매출{" "}
-                  <span className="text-emerald-600 font-medium">
-                    {topProfit.totalRevenue.toLocaleString()}원
-                  </span>
+                <div className="text-sm font-semibold text-slate-600">
+                  {topProfit.netProfit.toLocaleString()}원
                 </div>
               </>
             ) : (
-              <div className="text-sm text-muted-foreground py-4">
-                데이터가 부족합니다.
-              </div>
+              <div className="text-xs text-slate-400">데이터 부족</div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </motion.div>
 
       {/* 2. 효율왕 (Hourly Rate) */}
-      <motion.div variants={item}>
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4 md:p-6">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
-              최고 효율
-            </CardTitle>
-            <Zap className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent className="p-4 pt-1 md:p-6 md:pt-2">
+      <motion.div variants={item} className="h-full">
+        <div className="h-full flex flex-col justify-between bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:border-slate-300 transition-colors group relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-5 transform translate-x-1/4 -translate-y-1/4 group-hover:scale-110 transition-transform duration-500">
+            <Lightbulb className="w-24 h-24 text-slate-600" />
+          </div>
+          <div className="flex items-center gap-2.5 mb-2 relative z-10">
+            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+              <Lightbulb className="h-4 w-4 text-slate-500" />
+            </div>
+            <span className="text-[13px] font-bold text-slate-500 tracking-wide">
+              시급 효율왕
+            </span>
+          </div>
+
+          <div className="mt-auto relative z-10 space-y-1">
             {topEfficiency ? (
               <>
-                <div className="text-xl font-bold text-foreground">
+                <div className="text-[15px] sm:text-[17px] font-bold text-slate-800 tracking-tight leading-snug break-keep">
                   {topEfficiency.name}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  시간당{" "}
-                  <span className="font-medium text-purple-600">
-                    {topEfficiency.hourlyRate.toLocaleString()}원
-                  </span>
-                </p>
-                <div className="mt-2 text-xs text-muted-foreground/80">
-                  {topEfficiency.totalHours}시간 투입
-                </div>
-              </>
-            ) : (
-              <div className="text-sm text-muted-foreground py-4">
-                데이터가 부족합니다.
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* 3. 수익률왕 (ROI) */}
-      <motion.div variants={item}>
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 p-4 md:p-6">
-            <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
-              최고 수익률
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-rose-600" />
-          </CardHeader>
-          <CardContent className="p-4 pt-1 md:p-6 md:pt-2">
-            {topRoi ? (
-              <>
-                <div className="text-xl font-bold text-foreground">
-                  {topRoi.name}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  수익률{" "}
-                  <span className="font-medium text-rose-600">
-                    {topRoi.roi}%
-                  </span>
-                </p>
-                <div className="mt-2 text-xs text-muted-foreground/80">
-                  비용{" "}
-                  <span className="text-rose-600 font-medium">
-                    {topRoi.totalExpense.toLocaleString()}원
+                <div className="text-sm font-semibold text-slate-600">
+                  {topEfficiency.hourlyRate.toLocaleString()}원{" "}
+                  <span className="text-[11px] text-slate-400 font-medium tracking-normal">
+                    / h
                   </span>
                 </div>
               </>
             ) : (
-              <div className="text-sm text-muted-foreground py-4">
-                데이터가 부족합니다.
-              </div>
+              <div className="text-xs text-slate-400">데이터 부족</div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </motion.div>
     </motion.div>
   );

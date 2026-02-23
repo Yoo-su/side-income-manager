@@ -8,8 +8,15 @@ import {
   Delete,
   ParseUUIDPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { IncomeSourceService } from './income-source.service';
 import {
   CreateIncomeSourceDto,
@@ -19,8 +26,13 @@ import { IncomeSource } from './entities/income-source.entity';
 
 import { TransactionService } from '../transaction/transaction.service';
 import { Transaction } from '../transaction/entities/transaction.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '../user/entities/user.entity';
 
 @ApiTags('Income Sources')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('income-sources')
 export class IncomeSourceController {
   constructor(
@@ -35,8 +47,11 @@ export class IncomeSourceController {
     description: '수입원이 성공적으로 생성되었습니다.',
     type: IncomeSource,
   })
-  create(@Body() createIncomeSourceDto: CreateIncomeSourceDto) {
-    return this.incomeSourceService.create(createIncomeSourceDto);
+  create(
+    @Body() createIncomeSourceDto: CreateIncomeSourceDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.incomeSourceService.create(createIncomeSourceDto, user.id);
   }
 
   @Get()
@@ -46,8 +61,8 @@ export class IncomeSourceController {
     description: '모든 수입원 목록을 반환합니다.',
     type: [IncomeSource],
   })
-  findAll() {
-    return this.incomeSourceService.findAll();
+  findAll(@CurrentUser() user: User) {
+    return this.incomeSourceService.findAll(user.id);
   }
 
   @Get(':id')
@@ -58,8 +73,8 @@ export class IncomeSourceController {
     type: IncomeSource,
   })
   @ApiResponse({ status: 404, description: '수입원을 찾을 수 없습니다.' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.incomeSourceService.findOne(id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.incomeSourceService.findOne(id, user.id);
   }
 
   @Patch(':id')
@@ -73,8 +88,9 @@ export class IncomeSourceController {
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateIncomeSourceDto: UpdateIncomeSourceDto,
+    @CurrentUser() user: User,
   ) {
-    return this.incomeSourceService.update(id, updateIncomeSourceDto);
+    return this.incomeSourceService.update(id, updateIncomeSourceDto, user.id);
   }
 
   @Get(':id/transactions')
@@ -84,8 +100,11 @@ export class IncomeSourceController {
     description: '해당 수입원의 거래 내역을 반환합니다.',
     type: [Transaction],
   })
-  getTransactions(@Param('id', ParseUUIDPipe) id: string) {
-    return this.transactionService.findAllBySourceId(id);
+  getTransactions(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.transactionService.findAllBySourceId(id, 1, 20, user.id);
   }
 
   @Get(':id/summary')
@@ -94,8 +113,16 @@ export class IncomeSourceController {
     status: 200,
     description: '해당 수입원의 요약 정보를 반환합니다.',
   })
-  getSummary(@Param('id', ParseUUIDPipe) id: string) {
-    return this.transactionService.getSummaryBySourceId(id);
+  getSummary(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.transactionService.getSummaryBySourceId(
+      id,
+      undefined,
+      undefined,
+      user.id,
+    );
   }
 
   @Get(':id/monthly-stats')
@@ -124,6 +151,7 @@ export class IncomeSourceController {
   })
   getMonthlyStats(
     @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
     @Query('limit') limit?: number,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
@@ -133,6 +161,7 @@ export class IncomeSourceController {
       limit || 6,
       startDate,
       endDate,
+      user.id,
     );
   }
 
@@ -140,7 +169,7 @@ export class IncomeSourceController {
   @ApiOperation({ summary: '수입원 삭제' })
   @ApiResponse({ status: 200, description: '수입원이 삭제되었습니다.' })
   @ApiResponse({ status: 404, description: '수입원을 찾을 수 없습니다.' })
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.incomeSourceService.remove(id);
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+    return this.incomeSourceService.remove(id, user.id);
   }
 }

@@ -1,9 +1,20 @@
-import { Controller, Get, Query } from '@nestjs/common';
-import { ApiOperation, ApiTags, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import {
+  ApiOperation,
+  ApiTags,
+  ApiQuery,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { TransactionService } from '../transaction/transaction.service';
 import { SourcePerformanceDto } from './dto/source-performance.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { User } from '../user/entities/user.entity';
 
 @ApiTags('Dashboard')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('dashboard')
 export class DashboardController {
   constructor(private readonly transactionService: TransactionService) {}
@@ -15,10 +26,11 @@ export class DashboardController {
   @ApiQuery({ name: 'year', required: false })
   @ApiQuery({ name: 'month', required: false })
   async getSummary(
+    @CurrentUser() user: User,
     @Query('year') year?: number,
     @Query('month') month?: number,
   ) {
-    return this.transactionService.getDashboardSummary(year, month);
+    return this.transactionService.getDashboardSummary(year, month, user.id);
   }
 
   @Get('portfolio')
@@ -28,10 +40,15 @@ export class DashboardController {
   @ApiQuery({ name: 'year', required: false })
   @ApiQuery({ name: 'month', required: false })
   async getPortfolio(
+    @CurrentUser() user: User,
     @Query('year') year?: number,
     @Query('month') month?: number,
   ) {
-    return this.transactionService.getPortfolioDistribution(year, month);
+    return this.transactionService.getPortfolioDistribution(
+      year,
+      month,
+      user.id,
+    );
   }
 
   @Get('monthly-stats')
@@ -65,6 +82,7 @@ export class DashboardController {
     description: '종료 날짜 (YYYY-MM-DD)',
   })
   async getMonthlyStats(
+    @CurrentUser() user: User,
     @Query('year') year?: number,
     @Query('limit') limit?: number,
     @Query('startDate') startDate?: string,
@@ -75,13 +93,19 @@ export class DashboardController {
         undefined,
         startDate,
         endDate,
+        user.id,
       );
     }
     if (limit) {
-      return this.transactionService.getRecentMonthlyStats(limit);
+      return this.transactionService.getRecentMonthlyStats(limit, user.id);
     }
     const targetYear = year || new Date().getFullYear();
-    return this.transactionService.getMonthlyStats(targetYear);
+    return this.transactionService.getMonthlyStats(
+      targetYear,
+      undefined,
+      undefined,
+      user.id,
+    );
   }
 
   @Get('source-ranking')
@@ -96,6 +120,7 @@ export class DashboardController {
     type: [SourcePerformanceDto],
   })
   async getSourceRanking(
+    @CurrentUser() user: User,
     @Query('year') year?: number,
     @Query('month') month?: number,
     @Query('startDate') startDate?: string,
@@ -106,8 +131,10 @@ export class DashboardController {
       month,
       startDate,
       endDate,
+      user.id,
     );
   }
+
   @Get('monthly-revenue-by-source')
   @ApiOperation({
     summary: '월별 수입원별 매출 추이 조회 (Top 5)',
@@ -133,6 +160,7 @@ export class DashboardController {
     description: '종료 날짜 (YYYY-MM-DD)',
   })
   async getMonthlyRevenueBySource(
+    @CurrentUser() user: User,
     @Query('limit') limit?: number,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
@@ -141,6 +169,7 @@ export class DashboardController {
       limit || 6,
       startDate,
       endDate,
+      user.id,
     );
   }
 }

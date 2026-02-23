@@ -5,8 +5,11 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Transaction } from '../../transaction/entities/transaction.entity';
+import { User } from '../../user/entities/user.entity';
 
 export enum IncomeSourceType {
   FREELANCE = 'FREELANCE',
@@ -19,6 +22,13 @@ export enum IncomeSourceType {
 export class IncomeSource {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ type: 'uuid' })
+  userId: string;
+
+  @ManyToOne(() => User, (user) => user.incomeSources, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
+  user: User;
 
   /** 수입원 이름 (예: 사이드 프로젝트 A, 외주 B) */
   @Column({ type: 'varchar', length: 100 })

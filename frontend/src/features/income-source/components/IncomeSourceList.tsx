@@ -4,7 +4,7 @@ import {
 } from "../hooks/useIncomeSources";
 import { IncomeSourceCard } from "./IncomeSourceCard";
 import { type IncomeSource } from "../types";
-import { Loader2, Plus } from "lucide-react";
+import { Spinner, Plus } from "@phosphor-icons/react";
 import { useState } from "react";
 import { IncomeSourceFormDialog } from "./IncomeSourceFormDialog";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ export const IncomeSourceList = () => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="animate-spin text-muted-foreground" size={24} />
+        <Spinner className="animate-spin text-muted-foreground" size={24} />
       </div>
     );
   }

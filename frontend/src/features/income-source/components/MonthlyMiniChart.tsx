@@ -20,12 +20,14 @@ export function MonthlyMiniChart({ data }: MonthlyMiniChartProps) {
     chart: {
       type: "line", // 복합 차트를 위해 line으로 변경
       toolbar: { show: false },
+      zoom: { enabled: false }, // 마우스 화면 줌(스크롤 먹힘) 비활성화
       fontFamily: "Pretendard Variable, sans-serif",
       background: "transparent",
       sparkline: { enabled: false },
     },
-    // 수익(Emerald), 지출(Rose), 순수익(Blue)
-    colors: ["#34d399", "#f43f5e", "#3b82f6"],
+    // 수익(Emerald), 지출(Rose), 순수익(Indigo)
+    // 대시보드 메인과 컬러 동기화
+    colors: ["#34d399", "#fb7185", "#6366f1"],
     plotOptions: {
       bar: {
         columnWidth: "50%",
@@ -105,13 +107,13 @@ export function MonthlyMiniChart({ data }: MonthlyMiniChartProps) {
   ];
 
   return (
-    <Card className="border border-border bg-white shadow-none">
-      <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-sm font-semibold text-muted-foreground">
+    <Card className="border border-slate-200 bg-white shadow-sm rounded-2xl overflow-hidden">
+      <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0 px-5 pt-5">
+        <CardTitle className="text-sm font-semibold text-slate-800">
           월별 재무 흐름
         </CardTitle>
       </CardHeader>
-      <CardContent className="h-[200px] md:h-[250px] p-2">
+      <CardContent className="h-[200px] md:h-[250px] px-2 pb-2">
         <ReactApexChart
           options={options}
           series={series}
