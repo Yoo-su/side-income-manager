@@ -1,4 +1,4 @@
-# Side Income Manager (부수입 관리자)
+# Income Note (수입노트)
 
 **🚀 [라이브 데모 바로가기](https://side-income-manager.vercel.app)**
 

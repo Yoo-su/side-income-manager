@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import { Logo } from "@/components/ui/logo";
 
 /** 사이드바 네비게이션 항목 */
 const NAV_ITEMS = [
@@ -95,26 +96,7 @@ function SidebarContent({
           collapsed ? "justify-center px-2" : "px-8",
         )}
       >
-        {collapsed ? (
-          <span
-            className="text-xl font-bold select-none text-white"
-            style={{ fontFamily: '"Moirai One", system-ui' }}
-          >
-            부
-          </span>
-        ) : (
-          <div className="flex flex-col">
-            <span
-              className="text-2xl font-bold select-none tracking-tight text-white"
-              style={{ fontFamily: '"Moirai One", system-ui' }}
-            >
-              부수입 매니저
-            </span>
-            <span className="text-[10px] font-medium tracking-[0.2em] text-slate-400 uppercase mt-0.5">
-              Side Income Manager
-            </span>
-          </div>
-        )}
+        <Logo className="text-white" collapsed={collapsed} />
       </div>
 
       {/* 네비게이션 */}
@@ -208,12 +190,7 @@ export function AppLayout() {
     <div className="flex min-h-screen w-full">
       {/* ===== 모바일 상단 헤더 (md 미만에서만 표시) ===== */}
       <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-white/10 bg-slate-900 px-4 md:hidden">
-        <span
-          className="text-lg font-bold select-none text-white"
-          style={{ fontFamily: '"Moirai One", system-ui' }}
-        >
-          부수입 매니저
-        </span>
+        <Logo className="text-white scale-90 origin-left" />
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-300 hover:bg-white/10 transition-colors"

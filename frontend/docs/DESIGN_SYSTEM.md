@@ -1,6 +1,6 @@
 # 디자인 시스템 (Design System)
 
-사이드 인컴 매니저(Side Income Manager)의 일관된 UI/UX를 유지하기 위한 디자인 가이드라인입니다.
+사이드 인컴 매니저(Income Note)의 일관된 UI/UX를 유지하기 위한 디자인 가이드라인입니다.
 
 ## 1. 디자인 철학 (Design Philosophy)
 
